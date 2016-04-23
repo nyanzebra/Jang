@@ -1,0 +1,54 @@
+#pragma once
+
+#include <set>
+#include <mutex>
+
+namespace ftl {
+namespace pattern {
+
+class observer;
+
+class subject {
+public:
+	subject() = default;
+	subject(const subject&) = default;
+	subject(subject&&) = default;
+	~subject() = default;
+
+	subject& operator=(const subject&) = default;
+
+	void attach(std::shared_ptr<observer> observer) { std::lock_guard<std::mutex> lock(_mutex); _observers.insert(observer); }
+
+	void notify() { std::lock_guard<std::mutex> lock(_mutex); _notify(); }
+
+protected:
+	virtual void _notify() = 0;
+
+protected:
+	std::set<std::weak_ptr<observer>, std::owner_less<std::weak_ptr<observer>>>  _observers;
+	std::mutex _mutex;
+};
+
+class observer {
+public:
+	observer() = default;
+	observer(const observer&) = default;
+	observer(observer&&) = default;
+	~observer() = default;
+
+	observer& operator=(const observer&) = default;
+
+	void watch(std::shared_ptr<subject> subject) { std::lock_guard<std::mutex> lock(_mutex); _subjects.insert(subject); }
+
+	void update() { std::lock_guard<std::mutex> lock(_mutex); _update(); }
+
+protected:
+	virtual void _update() = 0;
+
+protected:
+	std::set<std::shared_ptr<subject>, std::owner_less<std::shared_ptr<subject>>> _subjects;
+	std::mutex _mutex;
+};
+
+}
+}

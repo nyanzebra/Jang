@@ -1,0 +1,28 @@
+{
+  "graphics": {
+    "position": {
+      "x": 600.000000,
+      "y": 800.000000
+    },
+    "color": {
+      "background": 31,
+      "foreground": 37
+    }
+  },
+  "io": {
+    "color": {
+      "background": 31,
+      "foreground": 37
+    }
+  },
+  "log": {
+    "file": "/log/log.txt"
+  },
+  "test": {
+    "color": {
+      "failure": 12,
+      "success": 10,
+      "undecided": 9
+    }
+  }
+}
