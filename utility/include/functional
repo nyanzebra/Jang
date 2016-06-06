@@ -1,0 +1,68 @@
+#pragma once
+
+#include "type_traits"
+
+namespace jang {
+
+template <typename T = void> 
+struct comparator {
+	virtual bool operator()()
+};
+
+template <typename Return, typename... Args>
+class signature {
+public:
+	typedef signature<Return, Args...> self_type;
+
+protected:
+	Return(*_function)(Args...);
+
+private:
+
+public:
+	signature()  { _function = nullptr; }
+	signature(nullptr_type)  { _function = nullptr; }
+	signature(const self_type& other);
+	signature(self_type&& other);
+	~signature() { if (_function) delete _function; }
+
+protected:
+
+private:
+
+};
+
+template <typename Function>
+class function;
+
+template <typename Return, typename... Args>
+class function : public signature<Return, Args...> {
+public:
+	typedef function<Return, Args...> self_type;
+
+protected:
+
+private:
+
+public:
+	function() = default;
+	function(nullptr_type) = default;
+	template <typename Function, typename = enable_if_type<is_function<Function>::value>>
+	function(Function f) { _function = f; }
+	function(const self_type&) = default;
+	function(self_type&&) = default;
+	~function() = default;
+
+
+	operator bool() { return (_function == nullptr); }
+
+
+	typename type_traits<Return>::underlying_type operator()(typename type_traits<Args>::universal_type... args) { return _function(forward<typename type_traits<Args>::universal_type>(args)...); }
+
+protected:
+
+private:
+
+};
+
+}

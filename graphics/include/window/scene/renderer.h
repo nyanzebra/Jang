@@ -5,7 +5,7 @@
 #include "renderable.h"
 #include "renderer/vertex.h"
 
-namespace ftl {
+namespace jang {
 namespace graphics {
 
 #define VERTEX_SIZE sizeof(vertex)
@@ -102,7 +102,7 @@ private:
 	void _destroy();
 };
 
-template<typename RenderPolicy, typename = std::enable_if_t<std::is_base_of<renderer_policy_base, RenderPolicy>::value>>
+template <typename RenderPolicy, typename = std::enable_if_type<std::is_base_of<renderer_policy_base, RenderPolicy>::value>>
 class renderer {
 public:		 
 	renderer() { RenderPolicy::_init(); }

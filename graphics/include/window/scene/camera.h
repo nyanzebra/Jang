@@ -1,6 +1,6 @@
 #pragma once
 
-namespace ftl {
+namespace jang {
 namespace graphics {
 
 class camera {

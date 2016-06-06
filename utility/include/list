@@ -1,0 +1,82 @@
+#pragma once
+
+#include "container.h"
+#include "node.h"
+
+namespace jang {
+
+template <typename T, typename Allocator = memory::allocator<T>>
+class list : public container<forward_iterator<T>, Allocator> {
+public:
+	typedef list<T, Allocator> self_type;
+	typedef container<forward_iterator<T>, Allocator> parent_type;
+	typedef bidirectional_node<T> node_type;
+	typedef Allocator allocator_type;
+
+protected:
+
+private:
+	typename type_traits<node_type>::pointer_type _ptr;
+
+public:
+
+	list() : list(allocator_type()) {}
+	explicit list(const allocator_type& allocator) : _allocator(allocator) {}
+	list(size_type count, const T& value = T(), const allocator_type& allocator = allocator_type()) : list(allocator) { insert(begin(), count, value) }
+	explicit list(size_type count, const allocator_type& allocator = allocator_type()) {}
+	template <typename InputIterator, typename = enable_if_type<is_iterator<InputIterator>::value>>
+	list(InputIterator first, InputIterator last, const allocator_type& allocator = allocator_type()) : _allocator(allocator) { insert(begin(), first, last); }
+	list(const self_type& other) : _ptr(other._ptr), _allocator(other.allocator) {}
+	list(const self_type& other, const allocator_type& allocator) : _ptr(other._ptr), _allocator(allocator) {}
+	list(self_type&& other) : _ptr(move(other._ptr)), _allocator(move(other.allocator)) {}
+	list(self_type&& other, const allocator_type& allocator) : _ptr(move(other._ptr)), _allocator(allocator) {}
+	list(initializer_list<T> init, const allocator_type& allocator = allocator_type()) : _allocator(allocator) { insert(begin(), init); }
+	~list();
+
+
+
+
+	iterator_type insert(const iterator_type pos, const T& value) {
+		move(pos, end(), next(pos, 1));
+		auto cur = pos;
+		*cur = value;
+	}
+
+	iterator_type insert(const iterator_type pos, T&& value) {
+		move(pos, end(), next(pos, 1));
+		auto cur = pos;
+		*cur = move(value);
+	}
+
+	iterator_type insert(const iterator_type pos, size_type count, const T& value) {
+		move(pos, end(), next(pos, count));
+
+		for (size_type i = 0; i < count; ++i) {
+			auto it = (pos + i);
+			*it = value;
+		}
+	}
+
+	template< class InputIt >
+	iterator_type insert(const iterator_type pos, InputIt first, InputIt last) {
+		difference_type count = distance(first, last);
+
+		move(pos, end(), next(pos, count));
+
+		for (size_type i = 0; i < count; ++i) {
+			auto it = (pos + i);
+			*it = *(first + i);
+		}
+	}
+
+	iterator_type insert(const iterator_type pos, initializer_list<T> init) {
+		return insert(pos, init.begin(), init.end());
+	}
+
+protected:
+
+private:
+
+};
+
+}

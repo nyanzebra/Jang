@@ -1,0 +1,24 @@
+#pragma once
+
+#include <vector>
+#include "string"
+
+class transforms {
+public:
+	static std::vector<jang::string> tokenize(const jang::string& value, const char& delimiter) {
+		std::vector<jang::string> result;
+
+		jang::string line;
+		for (auto c : value) {
+			if (c == delimiter) {
+				result.push_back(line);
+				line = "";
+			} else {
+				line += c;
+			}
+		}
+
+		return result;
+	}
+};
+

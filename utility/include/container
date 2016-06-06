@@ -1,0 +1,74 @@
+#pragma once
+
+#include "iterator"	
+#include "exception"
+#include "utility"
+#include "functional"
+#include "allocator"
+#include "generic_type_cast"
+
+namespace jang {
+
+template <typename Iterator, typename Allocator = memory::allocator<typename iterator_traits<Iterator>::type>, typename = enable_if_type<is_iterator<Iterator>::value>>
+class container : public generic_type_cast {
+public:
+
+	typedef container<Iterator> self_type;
+	typedef Iterator iterator_type;
+	typedef Allocator allocator_type;
+	typedef typename Iterator::underlying_type underlying_type;
+
+protected:
+
+	underlying_type* _ptr;
+	iterator_type _begin = iterator_type(_ptr);
+	size_type _size;
+	allocator_type _allocator;
+
+private:
+
+public:
+	container() : container(allocator_type()) {}
+	explicit container(allocator_type alloc) : _size(0), _ptr(nullptr), _allocator(alloc) {}
+	container(size_type size, underlying_type* ptr, allocator_type alloc = allocator_type()) : container(alloc), _size(size), _ptr(ptr) {}
+	container(const self_type& other) : _size(other._size), _ptr(other._ptr), _allocator(other._allocator) {}
+	container(self_type&& other) : _size(move(other._size)), _ptr(move(other._ptr)), _allocator(move(other._allocator)) {}
+	virtual ~container() { if (_ptr) delete _ptr; }
+
+
+	iterator_type& begin() { return _begin; }
+	iterator_type& end() { return (_begin + _size); }
+	const iterator_type& cbegin() { return _begin; }
+	const iterator_type& cend() { return (_being + _size); }
+
+
+	virtual self_type& operator=(const self_type& other) { _allocator = other._size = other.size(); _ptr = other._ptr; }
+
+
+	allocator_type& allocator() { return _allocator; }
+
+
+	size_type size() const { return _size; }
+
+
+	bool is_empty() const { return _size == 0; }
+
+
+	size_type max_size() { function<size_type(int)> f = [](int x) { return x; }  return f(0); }
+
+
+	friend void swap(self_type& lhs, self_type& rhs) { auto temp = lhs; rhs = lhs; rhs = temp; }
+
+protected:
+
+	template <typename T, typename = enable_if_type<is_base_of<self_type, T>::value>>
+	virtual T _get(T*) const override { return T(begin(), end()); }
+
+	template <typename T, typename = enable_if_type<is_base_of<self_type, T>::value>>
+	virtual T _get_ptr() const override { return nullptr; }
+
+private:
+
+};
+
+}

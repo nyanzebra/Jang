@@ -1,9 +1,10 @@
 #pragma once
 
-#include "utility.h"
+#include <utility>
 #include "window/scene/renderable.h"
+#include <file>
 
-namespace ftl {
+namespace jang {
 namespace studio {
 
 enum class asset_type : char {
@@ -17,15 +18,15 @@ enum class asset_type : char {
 
 
 
-template<template<typename...> typename Allocator>
+template<template <typename...> typename Allocator>
 class asset {
 public:
 	typedef asset_type type;
 	typedef graphics::renderable renderable_type;
 
-	template<typename T, typename = std::enable_if_t <std::is_convertible<T, std::string>::value>>
+	template <typename T, typename = enable_if_type <is_convertible<T, string>::value>>
 	asset(const T& value) : _file(value) {}
-	template<typename T, typename = std::enable_if_t <std::is_convertible<T, std::string>::value>>
+	template <typename T, typename = enable_if_type <is_convertible<T, string>::value>>
 	asset(T&& value) : _file(value) {}
 	asset(const asset&) = default;
 	asset(asset&&) = default;

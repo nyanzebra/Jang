@@ -4,25 +4,25 @@
 #include <string>
 #include <utility.h>
 
-namespace ftl {
+namespace jang {
 namespace graphics {
 
 class shader {
 public:
 	shader() = default;
-	template<typename T, typename = std::enable_if_t<std::is_convertible<T, std::string>::value>>
+	template <typename T, typename = std::enable_if_type<std::is_convertible<T, jang::string>::value>>
 	shader(const T& vertex, const T& fragment) { compile(vertex, fragment); }
-	template<typename T, typename = std::enable_if_t<std::is_convertible<T, std::string>::value>>
-	shader(T&& vertex, T&& fragment) { compile(std::forward<std::string>(vertex), std::forward<std::string>(fragment)); }
+	template <typename T, typename = std::enable_if_type<std::is_convertible<T, jang::string>::value>>
+	shader(T&& vertex, T&& fragment) { compile(std::forward<jang::string>(vertex), std::forward<jang::string>(fragment)); }
 	~shader() { glDeleteProgram(_program); }
 
 	const GLuint& value() { return _program; }
 
 
-	template<typename T, typename = std::enable_if_t<std::is_convertible<T, std::string>::value>>
+	template <typename T, typename = std::enable_if_type<std::is_convertible<T, jang::string>::value>>
 	void compile(const T& vertex, const T& fragment);
 
-	template<typename T, typename = std::enable_if_t<std::is_convertible<T, std::string>::value>>
+	template <typename T, typename = std::enable_if_type<std::is_convertible<T, jang::string>::value>>
 	void compile(T&& vertex, T&& fragment);
 
 	void enable();

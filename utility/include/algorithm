@@ -1,0 +1,66 @@
+#pragma once
+
+#include "initializer_list"
+
+namespace jang {
+
+template <typename T>
+constexpr const T& max(const T& a, const T& b) { return (a < b ? b : a); }
+
+template <typename T, typename Comparator>
+constexpr const T& max(const T& a, const T& b) { Comparator c; return (c(a, b) ? b : a); }
+
+template <typename T>
+constexpr T max(initializer_list<T> init) {
+	T m = *init.begin();
+	for (auto it = init.begin(); it != init.end(); ++it) {
+		if (m < *it) {
+			m = *it;
+		}
+	}
+	return m;
+}
+
+template <typename T, typename Comparator>
+constexpr T max(initializer_list<T> init) {
+	Comparator c;
+	T m = *init.begin();
+	for (auto it = init.begin(); it != init.end(); ++it) {
+		if (c(m, *it)) {
+			m = *it;
+		}
+	}
+	return m;
+}
+
+
+template <typename T>
+constexpr const T& min(const T& a, const T& b) { return (a > b ? b : a); }
+
+template <typename T, typename Comparator>
+constexpr const T& min(const T& a, const T& b) { Comparator c; return (c(a, b) ? b : a); }
+
+template <typename T>
+constexpr T min(initializer_list<T> init) {
+	T m = *init.begin();
+	for (auto it = init.begin(); it != init.end(); ++it) {
+		if (m > *it) {
+			m = *it;
+		}
+	}
+	return m;
+}
+
+template <typename T, typename Comparator>
+constexpr T min(initializer_list<T> init) {
+	Comparator c;
+	T m = *init.begin();
+	for (auto it = init.begin(); it != init.end(); ++it) {
+		if (c(m, *it)) {
+			m = *it;
+		}
+	}
+	return m;
+}
+
+}

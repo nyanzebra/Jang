@@ -4,13 +4,13 @@
 
 #include <dependencies.h>
 
-namespace ftl {
+namespace jang {
 namespace graphics {
 
 class texture {
 public:
 	texture() = default;
-	template<typename T, typename = std::enable_if_t<std::is_convertible<T, std::string>::value>>
+	template <typename T, typename = std::enable_if_type<std::is_convertible<T, jang::string>::value>>
 	texture(T file_name, bool generate_mipmap = false) { load(file_name, generate_mipmap); }
 	texture(const texture&) = default;
 	texture(texture&&) = default;
@@ -18,7 +18,7 @@ public:
 
 	texture& operator=(const texture&) = default;
 
-	template<typename T, typename = std::enable_if_t<std::is_convertible<T, std::string>::value>>
+	template <typename T, typename = std::enable_if_type<std::is_convertible<T, jang::string>::value>>
 	const bool load(T file_name, bool generate_mipmap = false);
 
 	void bind(); 
@@ -32,7 +32,7 @@ private:
 
 	GLuint _id = 0;
 
-	std::string _file_name;
+	jang::string _file_name;
 	GLvoid* _data;
 	size_t _width;
 	size_t _height;

@@ -1,0 +1,46 @@
+#pragma once
+
+#include "type_traits"
+
+namespace jang {
+
+template <typename T, typename = enable_if_type<is_arithmetic<T>::value>>
+class numeric_limits {
+public:
+	typedef numeric_limits<T> self_type;
+	typedef T underlying_type;
+
+protected:
+
+private:
+
+
+public:
+
+	numeric_limits() = delete;
+	numeric_limits(const self_type&) = delete;
+	numeric_limits(self_type&&) = delete;
+	~numeric_limits() = default;
+
+
+	static constexpr const T (min)() noexcept { 
+		if (is_unsigned<T>::value) {
+			return T(0);
+		}
+		return -((max)() + 1);
+	}
+
+	static constexpr const T (max)() noexcept {
+		if (is_unsigned<T>::value) {
+			return T(-1);
+		}
+		return typename	make_unsigned<T>::type(-1) / 2;
+	}
+
+protected:
+
+private:
+
+};
+
+}

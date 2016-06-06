@@ -2,7 +2,7 @@
 #include  "io/console.h"
 #include "io/configurator.h"
 
-namespace ftl {
+namespace jang {
 namespace graphics {
 
 void window::_diagnostic() {
@@ -43,13 +43,13 @@ void window::position(const int& x, const int& y) {
 	glfwSetWindowPos(_window, x, y);
 }
 
-const bool window::create(const std::string& window_name) {
+const bool window::create(const jang::string& window_name) {
 	_window = glfwCreateWindow(DEFAULT_WINDOW_POSITION, window_name.c_str(), NULL, NULL);
 
 	glfwSetWindowPos(_window, DEFAULT_WINDOW_POSITION);
 
 	if (!_window) {
-		ftl::io::console::output_error(RED, WHITE, "ERROR: could not open window with GLFW\n");
+		jang::io::console::output_error(RED, WHITE, "ERROR: could not open window with GLFW\n");
 		glfwTerminate();
 		return false;
 	}
@@ -62,7 +62,7 @@ const bool window::create(const std::string& window_name) {
 
 	glewExperimental = GL_TRUE;
 	if (glewInit() != GLEW_OK) {
-		ftl::io::console::output_error(DEFAULT_COLOR_SCHEME, "ERROR:");
+		jang::io::console::output_error(DEFAULT_COLOR_SCHEME, "ERROR:");
 		return false;
 	}
 

@@ -1,0 +1,42 @@
+#pragma once
+
+#include "configurator"
+#include "file"
+
+#include "type_traits"
+
+namespace jang {
+namespace io {
+
+#define LOG_FILE_LOCATION(file) "../logs/" file ".txt"
+#define DEFAULT_LOG_FILE_LOCATION LOG_FILE_LOCATION("log")
+
+class log : public file<char> {
+public:
+	typedef log self_type;
+	typedef file<char> parent_type;
+
+protected:
+
+private:
+
+public:
+	log() = default;
+	template <typename T, typename = enable_if_type<is_convertible<T, jang::string>::value>>
+	log(const T& filename) : file(filename, mode::kAPPEND | mode::kUPDATE) {}
+	template <typename T, typename = enable_if_type<is_convertible<T, jang::string>::value>>
+	log(T&& filename) : file(std::forward<T>(filename), mode::kAPPEND | mode::kUPDATE) {}
+	log(const self_type&) = default;
+	log(self_type&&) = default;
+	~log() = default;
+
+	log& operator=(const log&) = default;
+
+	const bool open(const jang::string& filename) { return file<char>::open(file<char>::mode::kAPPEND, filename); }
+
+	template <typename Iterator, typename = enable_if_type<is_iterator<Iterator>::value>>
+	void write(Iterator begin, Iterator end) { file<char>::write<Iterator>(begin, end); }
+};
+
+} // io
+} // ftl

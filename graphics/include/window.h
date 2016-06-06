@@ -12,7 +12,7 @@
 #include "window/scene.h"
 #include "settings.h"
 
-namespace ftl {
+namespace jang {
 namespace graphics {
 
 class window {
@@ -24,7 +24,7 @@ public:
 
 	window& operator=(const window) = delete;
 
-	const bool create(const std::string& window_name);
+	const bool create(const jang::string& window_name);
 
 	void setup();
 
@@ -51,7 +51,7 @@ private:
 
 private:
 	GLFWwindow* _window;
-	std::map<std::string, std::unique_ptr<window>> _windows;
+	std::map<jang::string, std::unique_ptr<window>> _windows;
 	std::unique_ptr<scene> _scene;
 	size_type _frames = 0;
 	std::chrono::system_clock::time_point _last_time = std::chrono::system_clock::now();

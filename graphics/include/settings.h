@@ -5,7 +5,7 @@
 
 #include "utility.h"
 
-#define CONFIGURATION ftl::io::configurator::instance().settings()["graphics"]
+#define CONFIGURATION jang::io::configurator::instance().settings()["graphics"]
 
 #define DEFAULT_X_POSITION CONFIGURATION["position"]["x"].get<int>()	
 #define DEFAULT_Y_POSITION CONFIGURATION["position"]["y"].get<int>()

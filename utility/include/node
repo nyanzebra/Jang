@@ -1,0 +1,161 @@
+#pragma once
+
+#include "vector.h"
+
+#include "../type_traits.h"
+
+namespace jang {
+
+
+template <typename T>
+struct node {
+	typedef node<T> self_type;
+	typedef T underlying_type;
+
+	T value;
+
+	node(const T& val) : value(val) {}
+	node(T&& val) : value(move(val)) {}
+	node(const self_type& other) : value(other.value) {}
+	node(self_type&& other) : value(move(other.value)) {}
+	virtual ~node() {
+		if (is_pointer<T>::value) {
+			delete value;
+		}
+	}
+
+	self_type& operator=(const self_type& other) {
+		value = other.value;
+		return *this;
+	}
+};
+
+template <typename T>
+struct forward_node : public node<T> {
+	typedef forward_node<T> self_type;
+	typedef node<T> parent_type;
+	typedef T underlying_type;
+
+	typename type_traits<self_type>::pointer_type right;
+
+	forward_node(const T&) = default;
+	forward_node(T&&) = default;
+	forward_node(const self_type& other) : node(other.value), right(other.right) {}
+	forward_node(self_type&& other) : node(move(other.value)), right(move(other.right)) {}
+	virtual ~forward_node() {
+		if (right != nullptr) {
+			delete right;
+		}
+	}
+
+	self_type& operator=(const self_type& other) {
+		value = other.value;
+		right = other.right;
+		return *this;
+	}
+};
+
+template <typename T>
+struct bidirectional_node : public forward_node<T> {
+	typedef bidirectional_node<T> self_type;
+	typedef forward_node<T> parent_type;
+	typedef T underlying_type;
+
+	typename type_traits<self_type>::pointer_type left;
+
+	bidirectional_node(const T&) = default;
+	bidirectional_node(T&&) = default;
+	bidirectional_node(const self_type& other) : forward_node(other.value), left(other.left), right(other.right) {}
+	bidirectional_node(self_type&& other) : forward_node(move(other.value)), left(move(other.left)), right(move(other.right)) {}
+	virtual ~bidirectional_node() {
+		if (left != nullptr) {
+			delete left;
+		}
+	}
+
+	self_type& operator=(const self_type& other) {
+		value = other.value;
+		left = other.left;
+		right = other.right;
+		return *this;
+	}
+};
+
+template <typename T>
+struct binary_tree_node : bidirectional_node<T> {
+	typedef binary_tree_node<T> self_type;
+	typedef bidirectional_node<T> parent_type;
+	typedef T underlying_type;
+
+	typename type_traits<self_type>::const_pointer_type parent;
+
+	binary_tree_node(const T&) = default;
+	binary_tree_node(T&&) = default;
+	binary_tree_node(const self_type& other) : bidirectional_node(other.value), left(other.left), right(other.right), parent(other.parent) {}
+	binary_tree_node(self_type&& other) : bidirectional_node(move(other.value)), other.left(move(other.left)), other.right(move(other.right)), parent(move(other.parent)) {}
+	~binary_tree_node() {
+		if (parent != nullptr) {
+			delete parent;
+		}
+	}
+
+	self_type& operator=(const self_type& other) {
+		value = other.value;
+		left = other.left;
+		right = other.right;
+		parent = other.parent;
+		return *this;
+	}
+};
+
+template <typename T, typename Allocator = memory::allocator<T>>
+struct graph_node : public node<T> {
+	typedef graph_node<T, Allocator> self_type;
+	typedef node<T> parent_type;
+	typedef T underlying_type;
+
+	vector<typename type_traits<self_type>::pointer_type, Allocator> neighbours;
+
+	graph_node(const T& val) = default;
+	graph_node(T&& val) = default;
+	graph_node(const self_type& other) : node(other.value), neighbours(other.neighbours) {}
+	graph_node(self_type&& other) : node(move(other.value)), neighbours(move(other.neighbours)) {}
+	virtual ~graph_node() {
+		for (auto it = neighbours.begin(); it != neighbours.end(); ++it) {
+			if (*it != nullptr) {
+				delete *it;
+			}
+		}
+	}
+};
+
+template <typename T, typename Allocator>
+struct tree_node : graph_node<T, Allocator> {
+	typedef tree_node<T, Allocator> self_type;
+	typedef graph_node<T, Allocator> parent_type;
+	typedef T underlying_type;
+
+	typename type_traits<self_type>::const_pointer_type parent;
+
+	tree_node(const T&) = default;
+	tree_node(T&&) = default;
+	tree_node(const self_type& other) : graph_node(other.value), neighbours(other.neighbours), parent(other.parent){}
+	tree_node(self_type&& other) : graph_node(move(other.value)), neighbours(move(other.neighbours)), parent(move(other.parent)) {}
+	~tree_node() { 
+		if (parent != nullptr) {
+			delete parent;
+		}
+	}
+
+	self_type& operator=(const self_type& other) { 
+		value = other.value;
+		parent = other.parent;
+		neighbours = other.neighbours; 
+		return *this;
+	}
+};
+
+
+
+
+}

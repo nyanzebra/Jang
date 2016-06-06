@@ -2,7 +2,7 @@
 
 #include "material/texture.h"
 
-namespace ftl {
+namespace jang {
 namespace graphics {
 
 class material {

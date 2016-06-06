@@ -3,7 +3,7 @@
 #include <dependencies.h>
 #include "utility.h"
 
-namespace ftl {
+namespace jang {
 namespace graphics {
 
 inline void gl_error() {

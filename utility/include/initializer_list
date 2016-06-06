@@ -1,0 +1,35 @@
+#pragma once
+
+#include "types"
+
+namespace jang {
+
+template <typename T>
+class initializer_list {
+public:
+	typedef initializer_list<T> self_type;
+
+
+protected:
+
+private:
+	const T* _first, * _last;
+
+public:
+
+	constexpr initializer_list() noexcept : _first(0), _last(0) {}
+	constexpr initializer_list(const T* first, const T* last) noexcept : _first(first), _last(last) {}
+
+	constexpr const T* begin() const noexcept { return _first; }
+
+	constexpr const T* end() const noexcept { return _last; }
+
+	constexpr size_type size() const noexcept { return (_last - _first); }
+
+protected:
+
+private:
+
+};
+
+}

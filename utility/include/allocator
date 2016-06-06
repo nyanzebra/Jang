@@ -1,0 +1,393 @@
+#pragma once
+
+#include "type_traits"
+#include "exception"
+
+#include <limits>
+#include <new>
+#include <assert.h>
+
+namespace jang {
+namespace memory {
+
+
+template <typename T, size_type Alignment, typename = enable_if_type<is_pointer<T>::value && is_binary_power<Alignment>::value>>
+struct aligner {
+	static size_type size(T* address) { return ((reinterpret_cast<size_type>(address) + static_cast<size_type>(Alignment - 1)); }
+	static T* align(T* address) { return (T*)(size(address)) & static_cast<size_type>(~(Alignment - 1))); }
+	static difference_type adjust(const T* address) {
+		size_type adjustment = Alignment - (reinterpret_cast<size_type>(address) & reinterpret_cast<size_type>(Alignment - 1));
+
+		return (adjustment == Alignment ? 0 : adjustment);
+	}
+};
+
+template <typename T>
+class allocator_policy {
+public:
+	typedef T underlying_type;
+	typedef allocator_policy self_type;
+
+
+protected:
+
+private:
+
+public:
+
+	allocator_policy() = delete;
+	allocator_policy(const self_type&) = delete;
+	template <typename U>
+	allocator_policy(const allocator_policy<U>&) = delete;
+	allocator_policy(self_type&&) = delete;
+	~allocator_policy() = default;
+
+	T* address(T& value) const noexcept { return &value; }
+
+	const T* address(const T& value) const noexcept { return &value; }
+
+	virtual T* allocate(size_type n, const_void_pointer_type hint = 0) = 0;
+
+	virtual void deallocate(T* ptr, size_type n) = 0;
+
+	template <typename Arg, typename... Args, typename = enable_if_type<is_pointer<Arg>::value && is_move_assignable<Args...>::value>>
+	virtual void construct(Arg ptr, Args... args) = 0;
+
+	template <typename Arg, typename = enable_if_type<is_pointer<Arg>::value>>
+	virtual void destroy(Arg ptr) = 0;
+
+	virtual const size_type max_size() const = 0;
+
+protected:
+
+private:
+
+};
+
+template <typename T, size_type Alignment, size_type Page = 4096>
+class aligned_allocator_policy : public allocator_policy<T> {
+public:
+	typedef aligned_allocator_policy<T, Alignment, Page> self_type;
+
+protected:
+
+private:
+
+public:
+	aligned_allocator_policy() = default;
+	aligned_allocator_policy(const self_type&) = default;
+	template <typename U, size_type V, size_type W>
+	aligned_allocator_policy(const aligned_allocator_policy<U,V,W>&) = default;
+	aligned_allocator_policy(self_type&&) = default;
+	~aligned_allocator_policy() = default;
+
+	T* allocate(size_type n, const_void_pointer_type hint = 0) {
+		void_pointer_type ptr = 0;
+		if (n == 0) {
+			return ptr;
+		}
+
+		if (max_size() < n) {
+			throw bad_alloc();
+		}
+
+		const size_type size = n * sizeof(T);
+
+		if (system_architecture() == 32 || system_architecture() == 64) {
+			if (Page <= size) {
+				static_assert(sizeof(void_pointer_type) < Alignment, "Big allocations should at least match vector register size");
+				const size_t block_size = aligner<T, Alignment>::size() + size;
+				if (block_size <= size) {
+					throw bad_alloc();
+				}
+				const size_type container = reinterpret_cast<size_type>(::operator new(block_size));
+				if (!container) {
+					throw bad_alloc();
+				}
+				ptr = aligner<T, Alignment>::align(container);
+				static_cast<size_type *>(ptr)[-1] = container;
+
+			} else {
+				ptr = ::operator new(size);
+				if (!ptr) {
+					throw bad_alloc();
+				}
+			}
+		}
+
+		return (ptr);
+	}
+
+	void deallocate(T* ptr, size_type n) {
+		if (system_architecture() == 32 || system_architecture() == 64) {
+			if (max_size() < n) {
+				throw bad_alloc();
+			}
+
+			const size_type size = n * sizeof(T);
+
+			if (Page <= size) {
+				const size_type address = reinterpret_cast<size_type>(ptr);
+
+				if ((address & (Alignment - 1)) == 0) {
+					throw bad_alloc();
+				}
+
+				const size_type address_ptr = address - sizeof(void_pointer_type);
+
+				const size_type container = *reinterpret_cast<size_type *>(address_ptr);
+
+				if (container < address) {
+					throw bad_alloc();
+				}
+
+				if (sizeof(void_pointer_type) <= address - container) {
+					throw bad_alloc();
+				}
+
+				if (address - container <= aligner<T, Alignment>::size()) {
+					throw bad_alloc();
+				}
+
+				ptr = reinterpret_cast<void_pointer_type>(container);
+			}
+		}
+
+		::operator delete(ptr);
+	}
+
+	template <typename Arg, typename... Args, typename = enable_if_type<is_pointer<Arg>::value && is_move_assignable<Args...>::value>>
+	void construct(Arg ptr, Args... args) { ::operator new(((void*)ptr) Arg(forward<Args>(args)...)); }
+
+	template <typename Arg, typename = enable_if_type<is_pointer<Arg>::value>>
+	void destroy(Arg ptr) { ptr->~Arg(); }
+
+	const size_type max_size() const noexcept { return ((size_t)(-1) / sizeof(T)); }
+
+protected:
+
+private:
+
+};
+
+template <typename T>
+class standard_based_allocator_policy : public aligned_allocator_policy<T, 32> {
+public:
+	typedef standard_based_allocator_policy<T> self_type;
+	typedef aligned_allocator_policy<T, 32> parent_type;
+
+protected:
+
+private:
+
+public:
+
+	standard_based_allocator_policy() = default;
+	standard_based_allocator_policy(const self_type&) = default;
+	template <typename U>
+	standard_based_allocator_policy(const standard_based_allocator_policy<U>&) = default;
+	standard_based_allocator_policy(self_type&&) = default;
+	~standard_based_allocator_policy() = default;
+
+protected:
+
+private:
+
+};
+
+template <typename T, size_type Size>
+class stack_based_allocator_policy : public allocator_policy<T> {
+public:
+	typedef stack_based_allocator_policy<T, Size> self_type;
+	typedef allocator_policy<T> parent_type;
+
+protected:
+
+private:
+	bool _is_allocated;
+
+public:
+	stack_based_allocator_policy() = default;
+	stack_based_allocator_policy(const self_type&) = default;
+	template <typename U, size_type V>
+	stack_based_allocator_policy(const stack_based_allocator_policy<U, V>&) = default;
+	stack_based_allocator_policy(self_type&&) = default;
+	~stack_based_allocator_policy() = default;
+
+	T* allocate(size_type n, const_void_pointer_type hint = 0) {
+		void_pointer_type ptr = 0;
+		if (n == 0) {
+			return ptr;
+		}
+
+		if (max_size() < n) {
+			throw bad_alloc();
+		}
+
+		const size_type size = n * sizeof(T);
+
+		ptr = ::operator new(size);
+		if (!ptr) {
+			throw bad_alloc();
+		}
+
+		return (ptr);
+	}
+
+	void deallocate(T* ptr, size_type n) {
+		if (system_architecture() == 32 || system_architecture() == 64) {
+			if (max_size() < n) {
+				throw bad_alloc();
+			}
+
+			const size_type size = n * sizeof(T);
+
+			if (Page <= size) {
+				const size_type address = reinterpret_cast<size_type>(ptr);
+
+				if ((address & (Alignment - 1)) == 0) {
+					throw bad_alloc();
+				}
+
+				const size_type address_ptr = address - sizeof(void_pointer_type);
+
+				const size_type container = *reinterpret_cast<size_type *>(address_ptr);
+
+				if (container < address) {
+					throw bad_alloc();
+				}
+
+				if (sizeof(void_pointer_type) <= address - container) {
+					throw bad_alloc();
+				}
+
+				if (address - container <= aligner<T, Alignment>::size()) {
+					throw bad_alloc();
+				}
+
+				ptr = reinterpret_cast<void_pointer_type>(container);
+			}
+		}
+
+		::operator delete(ptr);
+	}
+
+	template <typename Arg, typename... Args, typename = enable_if_type<is_pointer<Arg>::value && is_move_assignable<Args...>::value>>
+	void construct(Arg ptr, Args... args) { ::operator new(((void*)ptr) Arg(forward<Args>(args)...)); }
+
+	template <typename Arg, typename = enable_if_type<is_pointer<Arg>::value>>
+	void destroy(Arg ptr) { ptr->~Arg(); }
+
+	const size_type max_size() const noexcept { return Size; }
+
+protected:
+
+private:
+
+};
+
+template <typename T, size_type size>
+class pool_based_allocator_policy : public allocator_policy<T> {
+public:
+
+protected:
+
+private:
+
+public:
+
+protected:
+
+private:
+
+};
+
+
+
+template <typename T, size_type size>
+class single_frame_based_allocator_policy : public allocator_policy<T> {
+public:
+
+protected:
+
+private:
+
+public:
+
+protected:
+
+private:
+
+};
+
+template <typename T, size_type size>
+class double_frame_based_allocator_policy : public allocator_policy<T> {
+public:
+
+protected:
+
+private:
+
+public:
+
+protected:
+
+private:
+
+};
+
+template <typename T, typename Policy = standard_based_allocator_policy<T>>
+class allocator : public Policy {
+public:
+	typedef T underlying_type;
+	typedef allocator self_type;
+	typedef Policy policy_type;
+
+protected:
+private:
+
+public:
+	static_assert(!is_const<T>::value, "The C++ Standard forbids containers of const elements because allocator<const T> is ill-formed.");
+
+	allocator() {}
+	allocator(const self_type&) {}
+	template <typename U>
+	allocator(const allocator<U>& alloc) {}
+	allocator(self_type&&) {}
+	~allocator() {}
+
+	template <typename U>
+	struct rebind { typedef allocator<U> other; };
+
+	T* address(T& value) const noexcept { return policy_type::address(value); }
+
+	const T* address(const T& value) const noexcept { return policy_type::address(value); }
+
+	T* allocate(size_type n, const_void_pointer_type hint = 0) { return policy_type::allocate(n, hint); }
+
+
+	void deallocate(T* ptr, size_type n) { policy_type::deallocate(ptr, n); }
+
+	template <typename Arg, typename... Args, typename = enable_if_type<is_pointer<Arg>::value && is_move_assignable<Args...>::value>>
+	void construct(Arg ptr, Args... args) { policy_type::construct(ptr, forward<Args>(args)...); }
+
+	template <typename Arg, typename = enable_if_type<is_pointer<Arg>::value>>
+	void destroy(Arg ptr) { policy_type::destroy(ptr); }
+
+	const size_type max_size() const noexcept { return policy_type::max_size(); }
+
+	template <typename A, typename B>
+	friend bool operator==(const allocator<A>& a, const allocator<B>& b) { return true; }
+
+	template <typename A, typename B>
+	friend bool operator!=(const allocator<A>& a, const allocator<B>& b) { return !(a == b); }
+
+private:
+
+private:
+
+};
+
+}
+}
+

@@ -2,7 +2,7 @@
 
 #include "../../../include/settings.h"
 
-namespace ftl {
+namespace jang {
 namespace graphics {
 
 void renderer_policy_3d::_init() {
@@ -49,7 +49,7 @@ void renderer_policy_3d::_start() {
 
 void renderer_policy_3d::_add(const renderable& object) {
 	if (!_can_render) {
-		ftl::io::console::output_line(DEFAULT_COLOR_SCHEME, "ERROR:\taction(s) was/were not surrounded with start and finish");
+		jang::io::console::output_line(DEFAULT_COLOR_SCHEME, "ERROR:\taction(s) was/were not surrounded with start and finish");
 	}
 	for (size_t i = 0; i < object.mesh().vertices().size(); i++) {
 		_data_buffer->position = glm::vec3(_transformation_stack.top() * glm::vec4(object.mesh().vertices()[i] + object.position(), 0));

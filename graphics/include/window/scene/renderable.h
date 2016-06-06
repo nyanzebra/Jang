@@ -5,7 +5,7 @@
 #include "renderable/material.h"
 #include "renderable/mesh.h"
 
-namespace ftl {
+namespace jang {
 namespace graphics {
 
 #define ORIGIN_POINT glm::vec3(0)

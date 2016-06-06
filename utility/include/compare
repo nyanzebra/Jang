@@ -1,0 +1,22 @@
+#pragma once
+
+#include "traits.h"
+
+namespace jang {
+
+template <typename T>
+struct equal {
+	bool operator()(typename traits<T>::const_reference_type lhs, typename traits<T>::const_reference_type rhs) { return lhs == rhs; }
+};
+
+template <typename T>
+struct less {
+	bool operator()(typename traits<T>::const_reference_type lhs, typename traits<T>::const_reference_type rhs) { return lhs < rhs; }
+};
+
+template <typename T>
+struct greater {
+	bool operator()(typename traits<T>::const_reference_type lhs, typename traits<T>::const_reference_type rhs) { return lhs > rhs; }
+};
+
+}

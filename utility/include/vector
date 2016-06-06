@@ -1,0 +1,153 @@
+#pragma once
+
+#include "container"
+#include "array"
+#include "initializer_list"
+
+namespace jang {
+
+template <typename T, typename Allocator>
+class vector : public container<random_access_iterator<T>, Allocator> {
+public:
+	typedef vector<T, Allocator> self_type;
+	typedef container<random_access_iterator<T>, Allocator> parent_type;
+
+protected:
+
+private:
+	array<T, 2> _backing_array;
+
+public:
+	vector() : vector(allocator_type()) {}
+	explicit vector(const allocator_type& allocator) : _allocator(allocator) { _end = next(begin(), size()); }
+	vector(size_type count, const T& value, const allocator_type& allocator = allocator_type()) : vector(allocator) { reserve(count); insert(begin(), count, value); }
+	vector(size_type count, const allocator_type& allocator = allocator_type()) : vector(allocator) { reserve(count); }
+	template <typename InputIterator, typename = enable_if_type<is_iterator<InputIterator>::value>>
+	vector(InputIterator first, InputIterator last, const allocator_type& allocator = allocator_type()) { reserve(distance(first, last)); insert(begin(), first, last); }
+	vector(const self_type& other) : parent_type(other), _allocator(other.allocator), _backing_array(other._backing_array) {}
+	vector(const self_type& other, const allocator_type& allocator) : vector(other), vector(allocator) {}
+	vector(self_type&& other) : parent_type(other), _allocator(move(other.allocator)), _backing_array(move(other._backing_array)) {}
+	vector(self_type&& other, const allocator_type& allocator) : vector(other), vector(allocator) {}
+	vector(initializer_list<T> init, const allocator_type& allocator = allocator_type()) : vector(allocator) { insert(begin(), init); }
+	~vector() { clear(); };
+
+
+
+
+	constexpr T& at(size_type pos) { return _backing_array.at(pos); }
+	constexpr const T& at(size_type pos) const { return _backing_array.at(pos); }
+
+
+	constexpr T& operator[](size_type pos) { return _backing_array[pos]; }
+	constexpr const T& operator[](size_type pos) const { return _backing_array[pos]; }
+
+
+	constexpr T& front() { return _backing_array.front(); }
+	constexpr const T& front() const { return _backing_array.front(); }
+
+
+	constexpr T& back() { return _backing_array.back(); }
+	constexpr const T& back() const { return _backing_array.back(); }
+
+
+	constexpr T* data() { return _ptr; }
+	constexpr const T* data() const { return _ptr; }
+
+
+	void reserve(size_type cap) { if (cap > capacity()) { _backing_array.reserve(cap); } }
+
+	size_type capacity() const { return _backing_array.size(); }
+
+	void shrink_to_fit() { if (capacity() > size()) { _back_array.reserve(size()); } }
+
+
+	void clear() noexcept { erase(begin(), end()); }
+
+	iterator_type insert(const iterator_type pos, const T& value) {
+		_size++;
+		if (size() >= capacity()) {
+			reserve(size() * 2);
+		}
+
+		move(pos, end(), next(pos, 1));
+
+		auto cur = pos;
+
+		*cur = value;
+	}
+	iterator_type insert(const iterator_type pos, T&& value) {
+		_size++;
+		if (size() >= capacity()) {
+			reserve(size() * 2);
+		}
+
+		move(pos, end(), next(pos, 1));
+
+		auto cur = pos;
+
+		*cur = move(value);
+	}
+	iterator_type insert(const iterator_type pos, size_type count, const T& value) {
+		_size += count;
+		if (size() >= capacity()) {
+			reserve(size() * 2);
+		}
+
+		move(pos, end(), next(pos, count));
+
+		for (size_type i = 0; i < count; ++i) {
+			auto it = (pos + i);
+			*it = value;
+		}
+	}
+	template <typename InputIterator, typename = enable_if_type<is_iterator<InputIterator>::value>>
+	iterator_type insert(const iterator_type pos, InputIterator first, InputIterator last) {
+		difference_type count = distance(first, last);
+		_size += count;
+		if (size() >= capacity()) {
+			reserve(size() * 2);
+		}
+
+		move(pos, end(), next(pos, count));
+
+		for (size_type i = 0; i < count; ++i) {
+			auto it = (pos + i);
+			*it = *(first + i);
+		}
+	}
+	iterator_type insert(const iterator_type pos, initializer_list<T> list) { return insert(pos, list.begin(), list.end()); }
+
+
+	template <typename... Args>
+	iterator_type emplace(const iterator_type pos, Args&&... args) {
+		auto ptr = _allocator.allocate(1);
+		_allocator.construct(ptr, forward<Args>(args)...);
+		return insert(pos, *ptr);
+	}
+
+
+	iterator_type erase(const iterator_type pos) {
+		_allocator.destroy(&(*pos));
+		_allocator.deallocate(&(*pos), 1);
+		return move(next(pos, 1), end(), pos);
+	}
+	iterator_type erase(const iterator_type first, const iterator_type last) {
+		for (auto it = first; it != last; ++it) {
+			_allocator.destroy(&(*it));
+			_allocator.deallocate(&(*it), 1);
+		}
+		move(first, last, end());
+		return move(last, end(), first);
+	}
+
+protected:
+
+private:
+
+
+
+};
+
+}
+
+

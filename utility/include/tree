@@ -1,0 +1,43 @@
+#pragma once
+
+#include "container.h"
+#include "node.h"
+#include "../functional.h"
+
+namespace jang {
+
+template <typename T, typename Allocator>
+class tree : container<bidirectional_iterator<node<T, Allocator>>> {
+public:
+	typedef T underlying_type;
+	typedef tree<Iterator, Allocator> self_type;
+	typedef node<T, Allocator> node_type;
+	typedef bidirectional_iterator<node_type> iterator;
+	typedef container<iterator> parent_type;
+	typedef function<bool(typename type_traits<node_type>::pointer_type, typename type_traits<underlying_type>::const_reference_type)> search_function;
+
+protected:			
+	typename type_traits<node_type>::pointer_type _root;
+
+private:
+
+public:
+	tree() : _root(nullptr) {}
+	tree(typename type_traits<self_type>::const_reference_trait other) : _root(other._root) {}
+	tree(self_type&& other) : _root(move(other._root)) {}
+	virtual ~tree() { if (_root) delete _root; }
+
+	void clear() { erase(begin(), end()); }
+
+	pair<iterator, bool> insert(typename type_traits<search_function>::const_reference_type search, typename type_traits<node_type>::pointer_type node, typename type_traits<underlying_type>::const_reference_type value) {
+		
+	}
+	pair<iterator, bool> insert(typename type_traits<underlying_type>::universal_type value) = 0;
+
+protected:
+
+private:
+
+};
+
+}

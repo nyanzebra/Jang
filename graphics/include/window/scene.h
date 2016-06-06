@@ -9,7 +9,7 @@
 #include "scene/renderer.h"
 #include "scene/shader.h"
 
-namespace ftl {
+namespace jang {
 namespace graphics {
 
 #define RENDERER_MODE_3D 57
@@ -23,7 +23,7 @@ public:
 		k2D,
 		kCUSTOM3D,
 		kCUSTOM2D
-	};		  
+	};		  you
 
 	scene() = default;
 	scene(const scene&) = delete;
@@ -36,7 +36,7 @@ public:
 
 	void unbind_shader();
 
-	template<typename RendererPolicy>
+	template <typename RendererPolicy>
 	void bind_renderer();
 
 	void unbind_renderer();

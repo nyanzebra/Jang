@@ -2,7 +2,7 @@
 
 #include <dependencies.h>
 
-namespace ftl {
+namespace jang {
 namespace graphics {
 
 struct vertex {

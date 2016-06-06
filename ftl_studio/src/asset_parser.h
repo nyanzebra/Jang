@@ -2,7 +2,7 @@
 
 #include "asset.h"
 
-//namespace ftl {
+//namespace jang {
 //namespace studio {
 //
 //template <typename T>

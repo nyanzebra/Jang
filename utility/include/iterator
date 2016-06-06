@@ -1,0 +1,174 @@
+#pragma once
+
+#include "type_traits"
+
+namespace jang {
+
+struct iterator_tag {};
+struct input_iterator_tag : virtual iterator_tag {};
+struct output_iterator_tag : virtual iterator_tag {};
+struct forward_iterator_tag : input_iterator_tag, output_iterator_tag {};
+struct bidirectional_iterator_tag : forward_iterator_tag {};
+struct random_access_iterator_tag : bidirectional_iterator_tag {};
+
+template <typename T>
+class iterator {
+public:
+	typedef iterator_tag iterator_category;
+	typedef T type;
+
+protected:
+	type* _ptr;
+
+private:
+
+public:
+	iterator(const type& val) { _ptr = new type(val); }
+	iterator(type&& val) { _ptr = new type(move(val)); }
+	iterator(const iterator& other) : _ptr(other._ptr) {}
+	iterator(iterator&& other) : _ptr(move(other._ptr)) {}
+	virtual ~iterator() { if (_ptr) delete _ptr; }
+
+	constexpr iterator& operator=(const iterator& other) { _ptr = other._ptr; return *this; }
+
+	constexpr type& operator*() { return *_ptr; }
+
+	constexpr iterator& operator++() { ++_ptr; return *this; }
+
+	constexpr friend void swap(iterator& lhs, iterator& rhs) { auto temp = lhs._ptr; lhs._ptr = rhs._ptr; rhs._pointer = temp; }
+};
+
+template <typename T>
+class input_iterator : public virtual iterator<T> {
+public:
+	using iterator<T>::iterator;
+
+	typedef input_iterator_tag iterator_category;
+	typedef T type;
+
+protected:
+
+private:
+
+public:
+	input_iterator(const input_iterator&) = default;
+	input_iterator(input_iterator&&) = default;
+	virtual ~input_iterator() = default;
+
+	constexpr friend bool operator!=(const input_iterator& lhs, const input_iterator& rhs) { return !(lhs == rhs); }
+
+	constexpr friend bool operator==(const input_iterator& lhs, const input_iterator& rhs) { return lhs._ptr == rhs._ptr; }
+
+
+	constexpr type operator*() { return *_ptr; }
+
+	constexpr type* operator->() const { return _ptr; }
+
+
+	constexpr input_iterator& operator++(int) { auto save = *this; _ptr++; return save; }
+};
+
+template <typename T>
+class output_iterator : public virtual iterator<T> {
+public:
+	using iterator<T>::iterator;
+
+	typedef output_iterator_tag iterator_category;
+	typedef T type;
+
+protected:
+
+private:
+
+public:
+	output_iterator(const output_iterator&) = default;
+	output_iterator(output_iterator&&) = default;
+	virtual ~output_iterator() = default;
+
+	constexpr output_iterator& operator++(int) { auto save = *this; _ptr++; return save; }
+};
+
+template <typename T>
+class forward_iterator : public input_iterator<T>, public output_iterator<T> {
+public:
+	using input_iterator<T>::input_iterator;  
+	using output_iterator<T>::output_iterator;
+
+	typedef forward_iterator_tag iterator_category;
+	typedef T type;
+
+protected:
+
+private:
+
+public:
+	forward_iterator(const forward_iterator&) = default;
+	forward_iterator(forward_iterator&&) = default;
+	virtual ~forward_iterator() = default;
+};
+
+template <typename T>
+class bidirectional_iterator : public forward_iterator<T> {
+public:
+	using forward_iterator<T>::forward_iterator;
+
+	typedef bidirectional_iterator_tag iterator_category;
+	typedef T type;
+
+protected:
+
+private:
+
+public:
+	bidirectional_iterator(const bidirectional_iterator&) = default;
+	bidirectional_iterator(bidirectional_iterator&&) = default;
+	virtual ~bidirectional_iterator() = default;
+
+	constexpr bidirectional_iterator& operator--() { --_ptr; return *this; }
+
+	constexpr bidirectional_iterator& operator--(int) { auto save = *this; _ptr--; return save; }
+};
+
+template <typename T>
+class random_access_iterator : public bidirectional_iterator<T> {
+public:
+	using bidirectional_iterator<T>::bidirectional_iterator;
+
+	typedef random_access_iterator_tag iterator_category;
+	typedef T type;
+
+protected:
+
+private:
+
+public:
+	random_access_iterator(const random_access_iterator&) = default;
+	random_access_iterator(random_access_iterator&&) = default;
+	~random_access_iterator() = default;
+
+	constexpr friend bool operator<(const random_access_iterator& lhs, const random_access_iterator& rhs) { return (lhs._ptr - rhs._ptr) < 0; }
+
+	constexpr friend bool operator>(const random_access_iterator& lhs, const random_access_iterator& rhs) { return (lhs._ptr - rhs._ptr) > 0; }
+
+	constexpr friend bool operator<=(const random_access_iterator& lhs, const random_access_iterator& rhs) { return !(lhs > rhs); }
+
+	constexpr friend bool operator>=(const random_access_iterator& lhs, const random_access_iterator& rhs) { return !(lhs < rhs); }
+
+
+	constexpr random_access_iterator& operator+=(size_type n) { _ptr += n; return *this; }
+
+	constexpr random_access_iterator& operator-=(size_type n) { _ptr -= n; return *this; }
+
+
+	constexpr friend random_access_iterator& operator+(const random_access_iterator& lhs, size_type rhs) { self_type res = lhs; res._ptr += rhs; return res; }
+
+	constexpr friend random_access_iterator& operator+(size_type lhs, const random_access_iterator& rhs) { return rhs + lhs; }
+
+	constexpr friend random_access_iterator& operator-(const random_access_iterator& lhs, size_type rhs) { self_type res = lhs; res._ptr -= rhs; return res; }
+
+	constexpr friend typename difference_type operator-(const random_access_iterator& lhs, const random_access_iterator& rhs) { return lhs._ptr - rhs._ptr; }
+
+	constexpr type& operator[](size_type index) const { return _ptr[index]; }
+};
+
+}

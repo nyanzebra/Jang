@@ -1,6 +1,6 @@
 #include "../../include/window/scene.h"
 
-namespace ftl {
+namespace jang {
 namespace graphics {
 
 void scene::bind_shader(const shader& shader) {
@@ -18,7 +18,7 @@ void scene::unbind_shader() {
 	}
 }
 
-template<typename Policy>
+template <typename Policy>
 void scene::bind_renderer() {
 	_renderer = std::unique_ptr<renderer<Policy>>(new renderer<Policy>());
 }

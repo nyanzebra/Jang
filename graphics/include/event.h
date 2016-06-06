@@ -5,10 +5,10 @@
 
 #include <dependencies.h>
 
-namespace ftl {
+namespace jang {
 namespace graphics {
 
-//template<typename T, typename... Args>
+//template <typename T, typename... Args>
 //class event {
 //public:
 //	typedef std::function<T(Args&&...)> callback;

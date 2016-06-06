@@ -1,6 +1,6 @@
 #include "../../../include/window/scene/shader.h"
 
-namespace ftl {
+namespace jang {
 namespace graphics {
 
 void shader::enable() {
@@ -26,7 +26,7 @@ void shader::_shader_info(const GLuint& shader) const {
 	glGetShaderInfoLog(shader, length, &length, &error_message[0]);
 	if (compile_status == GL_FALSE) {
 		glDeleteShader(shader);
-		throw ftl::exception(FTL_LOG_FILE("shader"), FTL_EXCEPTION_MESSAGE("shader could not compile..."));
+		throw jang::exception(FTL_LOG_FILE("shader"), FTL_EXCEPTION_MESSAGE("shader could not compile..."));
 	}
 }
 
@@ -50,7 +50,7 @@ const GLuint shader::_compile_fragment(const char* fragment) const {
 	return shader_fragment;
 }
 
-template<typename T, typename = std::enable_if_t<std::is_convertible<T, std::string>::value>>
+template <typename T, typename = std::enable_if_type<std::is_convertible<T, jang::string>::value>>
 void shader::compile(const T& vertex, const T& fragment) {
 
 	GLuint program = glCreateProgram();
@@ -63,7 +63,7 @@ void shader::compile(const T& vertex, const T& fragment) {
 
 	glLinkProgram(program);
 	if (!_is_valid(program)) {
-		throw ftl::exception(FTL_LOG_FILE("shader"), FTL_EXCEPTION_MESSAGE("shader program is invalid"));
+		throw jang::exception(FTL_LOG_FILE("shader"), FTL_EXCEPTION_MESSAGE("shader program is invalid"));
 	}
 
 	glDeleteShader(shader_vertex);

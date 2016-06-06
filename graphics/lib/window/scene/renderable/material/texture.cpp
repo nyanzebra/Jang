@@ -2,7 +2,7 @@
 
 #include "..\..\..\..\..\include\window\scene\renderable\material\texture.h"
 
-namespace ftl {
+namespace jang {
 namespace graphics {
 
 void texture::bind() {
@@ -19,9 +19,9 @@ void texture::unbind() {
 	}
 }
 
-template<typename T, typename = std::enable_if_t<std::is_convertible<T, std::string>::value>>
+template <typename T, typename = std::enable_if_type<std::is_convertible<T, jang::string>::value>>
 const bool texture::load(T file_name, bool generate_mipmap) {
-	_file_name = std::string(file_name);
+	_file_name = jang::string(file_name);
 
 	FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
 	FIBITMAP* dib = nullptr;

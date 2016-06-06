@@ -1,0 +1,50 @@
+#pragma once
+
+#ifndef FTL_TYPES
+#define FTL_TYPES	 
+
+typedef bool bit_type;
+typedef unsigned char byte_type;	 
+typedef void* void_pointer_type;
+typedef const void* const_void_pointer_type;
+typedef unsigned long long int size_type;
+typedef long long int ptr_difference_type;
+typedef ptr_difference_type difference_type;
+typedef decltype(nullptr) nullptr_type;
+
+typedef char utf8_char_type;
+typedef char16_t utf16_char_type;
+typedef char32_t utf32_char_type;
+typedef wchar_t wide_char_type;
+
+constexpr unsigned long long int operator"" _bytes(unsigned long long int size) { return size; }
+constexpr unsigned long long int operator"" _kilobytes(unsigned long long int size) { return size * 1024_bytes; }
+constexpr unsigned long long int operator"" _megabytes(unsigned long long int size) { return size * 1024_kilobytes; }
+constexpr unsigned long long int operator"" _gigabytes(unsigned long long int size) { return size * 1024_megabytes; }
+constexpr unsigned long long int operator"" _terabytes(unsigned long long int size) { return size * 1024_gigabytes; }
+constexpr unsigned long long int operator"" _petabytes(unsigned long long int size) { return size * 1024_terabytes; }
+
+#define SI_MULTIPLES(name)\
+	constexpr double operator"" _y##name(double value) { return _z##name(value) / 10; }\
+	constexpr double operator"" _z##name(double value) { return _a##name(value) / 10; }\
+	constexpr double operator"" _a##name(double value) { return _f##name(value) / 10; }\
+	constexpr double operator"" _f##name(double value) { return _p##name(value) / 10; }\
+	constexpr double operator"" _p##name(double value) { return _n##name(value) / 10; }\
+	constexpr double operator"" _n##name(double value) { return _u##name(value) / 10; }\
+	constexpr double operator"" _u##name(double value) { return _m##name(value) / 10; }\
+	constexpr double operator"" _m##name(double value) { return _c##name(value) / 10; }\
+	constexpr double operator"" _c##name(double value) { return _d##name(value) / 10; }\
+	constexpr double operator"" _d##name(double value) { return _##name(value) / 10; }\
+	constexpr double operator"" _##name(double value) { return value; }\
+	constexpr double operator"" _d##name(double value) { return _##name(value) * 10; }\
+	constexpr double operator"" _h##name(double value) { return _d##name(value) * 10; }\
+	constexpr double operator"" _k##name(double value) { return _h##name(value) * 10; }\
+	constexpr double operator"" _M##name(double value) { return _k##name(value) * 10; }\
+	constexpr double operator"" _G##name(double value) { return _M##name(value) * 10; }\
+	constexpr double operator"" _T##name(double value) { return _G##name(value) * 10; }\
+	constexpr double operator"" _P##name(double value) { return _T##name(value) * 10; }\
+	constexpr double operator"" _E##name(double value) { return _P##name(value) * 10; }\
+	constexpr double operator"" _Z##name(double value) { return _E##name(value) * 10; }\
+	constexpr double operator"" _Y##name(double value) { return _Z##name(value) * 10; }
+
+#endif
