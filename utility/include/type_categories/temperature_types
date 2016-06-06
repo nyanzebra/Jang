@@ -1,0 +1,27 @@
+#pragma once
+
+namespace jang {
+	
+#define KELVIN_MINIMUM 0
+#define CELSIUS_MINIMUM -273.15
+#define	FARENHEIT_MINIMUM -459.67
+
+constexpr long double operator"" _kelvin_type(long double value)  { return (value > KELVIN_MINIMUM ? value : KELVIN_MINIMUM); }
+constexpr long double operator"" _kelvin_type(unsigned long long int value)  { return value; }
+
+constexpr long double operator"" _celsius_type(long double value)  { return (value > CELSIUS_MINIMUM ? value : CELSIUS_MINIMUM); }
+constexpr long double operator"" _celsius_type(unsigned long long int value)  { return value; }
+
+constexpr long double operator"" _farenheit_type(long double value)  { return (value > FARENHEIT_MINIMUM ? value : FARENHEIT_MINIMUM); }
+constexpr long double operator"" _farenheit_type(unsigned long long int value)  { return value; }
+
+constexpr long double kelvin_to_celsius(long double value) { return value - (CELSIUS_MINIMUM); }
+constexpr long double kelvin_to_farenheit(long double value) { return (value * 1.8) + FARENHEIT_MINIMUM; }
+
+constexpr long double celsius_to_kelvin(long double value) { return value + CELSIUS_MINIMUM; }
+constexpr long double celsius_to_farenheit(long double value) { return (value * 1.8) + 32; }
+
+constexpr long double farenheit_to_celsius(long double value) { return (value - 32) / 1.8; }
+constexpr long double farenheit_to_kelvin(long double value) { return (value - FARENHEIT_MINIMUM) / 1.8; }
+
+}

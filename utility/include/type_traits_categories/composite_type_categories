@@ -1,0 +1,56 @@
+#pragma once
+
+#include "primary_type_categories"
+
+namespace jang {
+
+template <typename T>
+struct is_member_pointer : public implementation::is_member_pointer<remove_const_volatile_type<T>> {};
+
+template <typename T>
+constexpr bool is_member_pointer_value = is_member_pointer<T>::value;
+
+template <typename T>
+struct is_arithmetic : public bool_constant<is_integral_value<T> || is_floating_point_value<T>> {};
+
+template <typename T>
+constexpr bool is_arithmetic_value = is_arithmetic<T>::value;
+
+template <typename T>
+struct is_fundamental : public bool_constant<is_arithmetic_value<T> || is_void_value<T> || is_null_pointer_value<typename remove_const_volatile<T>::type>> {};
+
+template <typename T>
+constexpr bool is_fundamental_value = is_fundamental<T>::value;
+
+template <typename T>
+struct is_scalar : public bool_constant<is_arithmetic_value<T> || is_enum_value<T> || is_pointer_value<T> || is_member_pointer_value<T> || is_null_pointer_value<T>> {};
+
+template <typename T>
+constexpr bool is_scalar_value = is_scalar<T>::value;
+
+template <typename T>
+struct is_object : public bool_constant<is_scalar_value<T> || is_array_value<T> || is_union_value<T> || is_class_value<T>> {};
+
+template <typename T>
+constexpr bool is_object_value = is_object<T>::value;
+
+template <typename T>
+struct is_compound : public bool_constant<!is_fundamental_value<T>> {};
+
+template <typename T>
+constexpr bool is_compound_value = is_compound<T>::value;
+
+template <typename T>
+struct is_reference : public false_type {};
+
+template <typename T>
+struct is_reference<T&> : public true_type {};
+
+template <typename T>
+struct is_reference<T&&> : public true_type {};
+
+template <typename T>
+constexpr bool is_reference_value = is_reference<T>::value;
+
+}
+

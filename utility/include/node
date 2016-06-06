@@ -1,158 +1,167 @@
 #pragma once
 
-#include "vector.h"
+#include "vector"
 
-#include "../type_traits.h"
+#include "type_traits"
 
 namespace jang {
 
 
 template <typename T>
-struct node {
-	typedef node<T> self_type;
-	typedef T underlying_type;
+class node {
+public:
 
-	T value;
+protected:
+	T _value;
 
-	node(const T& val) : value(val) {}
-	node(T&& val) : value(move(val)) {}
-	node(const self_type& other) : value(other.value) {}
-	node(self_type&& other) : value(move(other.value)) {}
+private:
+public:
+	node(const T& val) : _value(val) {}
+	node(T&& val) : _value(move(val)) {}
+	node(const node& other) : _value(other._value) {}
+	node(node&& other) : _value(move(other._value)) {}
 	virtual ~node() {
-		if (is_pointer<T>::value) {
-			delete value;
+		if (is_pointer<T>::_value) {
+			delete _value;
 		}
 	}
 
-	self_type& operator=(const self_type& other) {
-		value = other.value;
+	node& operator=(const node& other) {
+		_value = other._value;
 		return *this;
 	}
+protected:
+private:
 };
 
 template <typename T>
-struct forward_node : public node<T> {
-	typedef forward_node<T> self_type;
-	typedef node<T> parent_type;
-	typedef T underlying_type;
-
-	typename type_traits<self_type>::pointer_type right;
-
+class forward_node : public node<T> {
+public:
+protected:
+	forward_node* _right;
+private:
+public:
 	forward_node(const T&) = default;
 	forward_node(T&&) = default;
-	forward_node(const self_type& other) : node(other.value), right(other.right) {}
-	forward_node(self_type&& other) : node(move(other.value)), right(move(other.right)) {}
+	forward_node(const forward_node& other) : node<T>(other), _right(other._right) {}
+	forward_node(forward_node&& other) : node<T>(move(other)), _right(move(other._right)) {}
 	virtual ~forward_node() {
-		if (right != nullptr) {
-			delete right;
+		if (_right != nullptr) {
+			delete _right;
 		}
 	}
 
-	self_type& operator=(const self_type& other) {
-		value = other.value;
-		right = other.right;
+	forward_node& operator=(const forward_node& other) {
+		this->_value = other._value;
+		_right = other._right;
 		return *this;
 	}
+protected:
+private:
 };
 
 template <typename T>
-struct bidirectional_node : public forward_node<T> {
-	typedef bidirectional_node<T> self_type;
-	typedef forward_node<T> parent_type;
-	typedef T underlying_type;
-
-	typename type_traits<self_type>::pointer_type left;
-
+class bidirectional_node : public forward_node<T> {
+public:
+protected:
+	bidirectional_node* _left;
+private:
+public:
 	bidirectional_node(const T&) = default;
 	bidirectional_node(T&&) = default;
-	bidirectional_node(const self_type& other) : forward_node(other.value), left(other.left), right(other.right) {}
-	bidirectional_node(self_type&& other) : forward_node(move(other.value)), left(move(other.left)), right(move(other.right)) {}
+	bidirectional_node(const bidirectional_node& other) : forward_node<T>(other), _left(other._left) {}
+	bidirectional_node(bidirectional_node&& other) : forward_node<T>(move(other)), _left(move(other._left)) {}
 	virtual ~bidirectional_node() {
-		if (left != nullptr) {
-			delete left;
+		if (_left != nullptr) {
+			delete _left;
 		}
 	}
 
-	self_type& operator=(const self_type& other) {
-		value = other.value;
-		left = other.left;
-		right = other.right;
+	bidirectional_node& operator=(const bidirectional_node& other) {
+		this->_value = other._value;
+		_left = other._left;
+		this->_right = other._right;
 		return *this;
 	}
+protected:
+private:
 };
 
 template <typename T>
-struct binary_tree_node : bidirectional_node<T> {
-	typedef binary_tree_node<T> self_type;
-	typedef bidirectional_node<T> parent_type;
-	typedef T underlying_type;
-
-	typename type_traits<self_type>::const_pointer_type parent;
-
+struct binary_tree_node : public bidirectional_node<T> {
+public:
+protected:
+	const binary_tree_node* _parent;
+private:
+public:
 	binary_tree_node(const T&) = default;
 	binary_tree_node(T&&) = default;
-	binary_tree_node(const self_type& other) : bidirectional_node(other.value), left(other.left), right(other.right), parent(other.parent) {}
-	binary_tree_node(self_type&& other) : bidirectional_node(move(other.value)), other.left(move(other.left)), other.right(move(other.right)), parent(move(other.parent)) {}
+	binary_tree_node(const binary_tree_node& other) : bidirectional_node<T>(other), _parent(other._parent) {}
+	binary_tree_node(binary_tree_node&& other) : bidirectional_node<T>(move(other)), _parent(move(other._parent)) {}
 	~binary_tree_node() {
-		if (parent != nullptr) {
-			delete parent;
+		if (_parent != nullptr) {
+			delete _parent;
 		}
 	}
 
-	self_type& operator=(const self_type& other) {
-		value = other.value;
-		left = other.left;
-		right = other.right;
-		parent = other.parent;
+	binary_tree_node& operator=(const binary_tree_node& other) {
+		this->_value = other._value;
+		this->_left = other._left;
+		this->_right = other._right;
+		_parent = other._parent;
 		return *this;
 	}
+protected:
+private:
 };
 
-template <typename T, typename Allocator = memory::allocator<T>>
-struct graph_node : public node<T> {
-	typedef graph_node<T, Allocator> self_type;
-	typedef node<T> parent_type;
-	typedef T underlying_type;
-
-	vector<typename type_traits<self_type>::pointer_type, Allocator> neighbours;
-
+template <typename T, typename Allocator = allocator<T>>
+class graph_node : public node<T> {
+public:
+protected:
+private:
+	graph_node* _neighbours;
+public:
 	graph_node(const T& val) = default;
 	graph_node(T&& val) = default;
-	graph_node(const self_type& other) : node(other.value), neighbours(other.neighbours) {}
-	graph_node(self_type&& other) : node(move(other.value)), neighbours(move(other.neighbours)) {}
+	graph_node(const graph_node& other) : node<T>(other), _neighbours(other._neighbours) {}
+	graph_node(graph_node&& other) : node<T>(move(other)), _neighbours(move(other._neighbours)) {}
 	virtual ~graph_node() {
-		for (auto it = neighbours.begin(); it != neighbours.end(); ++it) {
+		for (auto it = _neighbours.begin(); it != _neighbours.end(); ++it) {
 			if (*it != nullptr) {
 				delete *it;
 			}
 		}
 	}
+protected:
+private:
 };
 
 template <typename T, typename Allocator>
-struct tree_node : graph_node<T, Allocator> {
-	typedef tree_node<T, Allocator> self_type;
-	typedef graph_node<T, Allocator> parent_type;
-	typedef T underlying_type;
-
-	typename type_traits<self_type>::const_pointer_type parent;
-
+class tree_node : public graph_node<T, Allocator> {
+public:
+protected:
+	const tree_node* _parent;
+private:
+public:
 	tree_node(const T&) = default;
 	tree_node(T&&) = default;
-	tree_node(const self_type& other) : graph_node(other.value), neighbours(other.neighbours), parent(other.parent){}
-	tree_node(self_type&& other) : graph_node(move(other.value)), neighbours(move(other.neighbours)), parent(move(other.parent)) {}
+	tree_node(const tree_node& other) : graph_node<T, Allocator>(other._value), _parent(other._parent){}
+	tree_node(tree_node&& other) : graph_node<T, Allocator>(move(other._value)), _parent(move(other._parent)) {}
 	~tree_node() { 
-		if (parent != nullptr) {
-			delete parent;
+		if (_parent != nullptr) {
+			delete _parent;
 		}
 	}
 
-	self_type& operator=(const self_type& other) { 
-		value = other.value;
-		parent = other.parent;
-		neighbours = other.neighbours; 
+	tree_node& operator=(const tree_node& other) { 
+		this->_value = other._value;
+		_parent = other._parent;
+		this->_neighbours = other._neighbours; 
 		return *this;
 	}
+protected:
+private:
 };
 
 

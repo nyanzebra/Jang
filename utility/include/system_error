@@ -1,0 +1,85 @@
+#pragma once
+
+#include "exception"
+
+namespace jang {
+
+class error_condition {
+//member variables
+public:
+protected:
+private:
+//member methods
+public:
+	error_condition() = default;
+	error_condition(const error_condition&) = default;
+	error_condition(error_condition&&) = default;
+	~error_condition() = default;
+
+	error_condition& operator=(const error_condition&) = default;
+	error_condition& operator=(error_condition&&) = default;
+protected:
+private:
+};
+
+class error_category {
+//member variables
+public:
+protected:
+private:
+//member methods
+public:
+	error_category() = default;
+	error_category(const error_category&) = default;
+	error_category(error_category&&) = default;
+	~error_category() = default;
+
+	error_category& operator=(const error_category&) = default;
+	error_category& operator=(error_category&&) = default;
+protected:
+private:
+};
+
+class error_code {
+//member variables
+public:
+protected:
+private:
+//member methods
+public:
+	error_code() = default;
+	error_code(int code, const error_category& category) {}
+	template <typename ErrorCode>
+	error_code(ErrorCode code) {}
+	error_code(const error_code&) = default;
+	error_code(error_code&&) = default;
+	~error_code() = default;
+
+	error_code& operator=(const error_code&) = default;
+	error_code& operator=(error_code&&) = default;
+protected:
+private:
+};
+
+class system_error : public runtime_error {
+public:
+protected:
+private:
+public:
+	system_error() : runtime_error("Invalid argument") {}
+	template <typename T>
+	system_error(const T& value) : runtime_error(value) {}
+	template <typename T>
+	system_error(T&& value) : runtime_error(forward<T>(value)) {}
+	system_error(const system_error&) = default;
+	system_error(system_error&&) = default;
+	virtual ~system_error() throw() = default;
+
+	system_error& operator=(const system_error&) = default;
+	system_error& operator=(system_error&&) = default;
+
+protected:
+private:
+};
+
+}

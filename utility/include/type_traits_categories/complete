@@ -1,0 +1,88 @@
+#pragma once
+
+#include "../type_categories/fundamental_constant_types"
+
+namespace jang {
+
+template <typename T>
+struct is_complete : public bool_constant<(sizeof(T) > 0)> {};
+
+template <typename T>
+constexpr bool is_complete_value = is_complete<T>::value;
+
+template <typename... T> 
+struct are_complete;
+
+template <>
+struct are_complete<> : public false_type {};
+
+template <typename T, typename U, typename... V>
+struct are_complete<T, U, V...> : public are_complete<T>, public are_complete<U, V...> {};
+
+template <typename T>
+struct are_complete<T, T> : public are_complete<T> {};
+
+template <typename T>
+struct are_complete<T> : public bool_constant<(sizeof(T) > 0)> {}; 
+
+template <typename T>
+struct are_complete<T&> : public are_complete<T> {};
+
+template <typename T>
+struct are_complete<T&&> : public are_complete<T> {};
+
+template <typename Result, typename... Args>
+struct are_complete<Result(*)(Args...)> : public are_complete<Result> {};
+
+template <typename... Args>
+struct are_complete<void(*)(Args...)> {};
+
+template <typename Result, typename... Args>
+struct are_complete<Result(Args...)> : public are_complete<Result> {};
+
+template <typename... Args>
+struct are_complete<void(Args...)> {};
+
+template <typename Result, typename Class, typename... Args>
+struct are_complete<Result(Class::*)(Args...)> : public are_complete<Class> {};
+
+template <typename Result, typename Class, typename... Args>
+struct are_complete<Result(Class::*)(Args...) const> : public are_complete<Class> {};
+
+template <typename Result, typename Class, typename... Args>
+struct are_complete<Result(Class::*)(Args...) volatile> : public are_complete<Class> {};
+
+template <typename Result, typename Class, typename... Args>
+struct are_complete<Result(Class::*)(Args...) const volatile> : public are_complete<Class> {};
+
+template <typename Result, typename Class, typename... Args>
+struct are_complete<Result(Class::*)(Args...)&> : public are_complete<Class> {};
+
+template <typename Result, typename Class, typename... Args>
+struct are_complete<Result(Class::*)(Args...) const&> : public are_complete<Class> {};
+
+template <typename Result, typename Class, typename... Args>
+struct are_complete<Result(Class::*)(Args...) volatile&> : public are_complete<Class> {};
+
+template <typename Result, typename Class, typename... Args>
+struct are_complete<Result(Class::*)(Args...) const volatile&> : public are_complete<Class> {};
+
+template <typename Result, typename Class, typename... Args>
+struct are_complete<Result(Class::*)(Args...) &&> : public are_complete<Class> {};
+
+template <typename Result, typename Class, typename... Args>
+struct are_complete<Result(Class::*)(Args...) const&&> : public are_complete<Class> {};
+
+template <typename Result, typename Class, typename... Args>
+struct are_complete<Result(Class::*)(Args...) volatile&&> : public are_complete<Class> {};
+
+template <typename Result, typename Class, typename... Args>
+struct are_complete<Result(Class::*)(Args...) const volatile&&> : public are_complete<Class> {};
+
+template <typename Result, typename Class>
+struct are_complete<Result Class::*> : public are_complete<Class> {};
+
+template <typename... T>
+constexpr bool are_complete_value = are_complete<T...>::value;
+
+}

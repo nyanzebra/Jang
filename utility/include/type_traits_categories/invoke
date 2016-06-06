@@ -1,0 +1,128 @@
+#pragma once
+
+#include "supported_operations"
+#include "member_pointer_traits"
+#include "type_relationships"
+#include "complete"
+#include "../utility"
+
+namespace jang {
+	
+
+struct any_type { any_type(...); };
+struct nothing_type {};
+
+template <typename... Args>
+auto invoke(any_type, Args&&... args) -> nothing_type;
+
+template <
+	typename Function, 
+	typename Arg0, 
+	typename... Args,
+    typename = enable_if_type<
+        is_member_function_pointer_value<remove_reference_type<Function>> &&
+        is_base_of_value<
+        	remove_reference_type<
+        		member_pointer_traits_class_type<
+        			remove_reference_type<Function>
+    			>
+			>,
+       		remove_reference_type<Arg0>
+   		>
+    >
+>
+auto invoke(Function&& function, Arg0&& arg0, Args&&... args) -> decltype((forward<Arg0>(arg0).*function)(forward<Args>(args)...));
+
+template <
+	typename Function, 
+	typename Arg0, 
+	typename... Args,
+    typename = enable_if_type<
+        is_member_function_pointer<remove_reference_type<Function>>::value &&
+    	!is_base_of_value<
+    		remove_reference_type<
+    			member_pointer_traits_class_type<
+    				remove_reference_type<Function>
+				>
+			>,
+           	remove_reference_type<Arg0>
+       	>
+    >
+>
+auto invoke(Function&& function, Arg0&& arg0, Args&& ...args) -> decltype(((*forward<Arg0>(arg0)).*function)(forward<Args>(args)...));
+
+template <
+	typename Function, 
+	typename Arg0,
+    typename = enable_if_type<
+        is_member_object_pointer<remove_reference_type<Function>>::value &&
+        is_base_of<member_pointer_traits_class_type<remove_reference_type<Function>>,
+                   remove_reference_type<Arg0>>::value
+    >
+ >
+auto invoke(Function&& function, Arg0&& arg0) -> decltype(forward<Arg0>(arg0).*function);
+
+template <
+	typename Function, 
+	typename Arg0,
+    typename = enable_if_type<
+        is_member_object_pointer<remove_reference_type<Function>>::value &&
+        !is_base_of<member_pointer_traits_class_type<remove_reference_type<Function>>,
+                   remove_reference_type<Arg0>>::value
+    >
+ >
+auto invoke(Function&& function, Arg0&& arg0) -> decltype((*forward<Arg0>(arg0)).*function);
+
+template <typename Function, typename... Args>
+auto invoke(Function&& function, Args&& ...args) -> decltype(forward<Function>(function)(forward<Args>(args)...));
+
+template <typename Function, typename... Args>
+using invokable_type = decltype(invoke(declval<Function>(), declval<Args>()...));
+
+template <typename Function, typename... Args>
+constexpr bool is_invokable() {	return are_complete_value<Function> && !is_same_value<invokable_type<Function, Args...>, nothing_type>; }
+
+namespace implementation {
+
+template <bool Invokable, typename Function, typename... Args>
+struct invoke_of {};
+
+template <typename Function, typename... Args>
+struct invoke_of<true, Function, Args...> { typedef invokable_type<Function, Args...> type; };
+
+}
+
+template <typename Function, typename... Args>
+struct invoke_of : public implementation::invoke_of<is_invokable<Function, Args...>(), Function, Args...> {};
+
+template <typename Function, typename Arg0, typename... Args, typename>
+inline auto invoke(Function&& function, Arg0&& arg0, Args&&... args) -> decltype((forward<Arg0>(arg0).*function)(forward<Args>(args)...)) { return (forward<Arg0>(arg0).*function)(forward<Args>(args)...); }
+
+template <typename Function, typename Arg0, typename... Args, typename>
+inline auto invoke(Function&& function, Arg0&& arg0, Args&&... args) -> decltype(((*forward<Arg0>(arg0)).*function)(forward<Args>(args)...)) { return ((*forward<Arg0>(arg0)).*function)(forward<Args>(args)...); }
+
+template <typename Function, typename Arg0, typename>
+inline auto invoke(Function&& function, Arg0&& arg0) -> decltype(forward<Arg0>(arg0).*function) { return forward<Arg0>(arg0).*function; }
+
+template <typename Function, typename Arg0, typename>
+inline auto invoke(Function&& function, Arg0&& arg0) -> decltype((*forward<Arg0>(arg0)).*function) { return (*forward<Arg0>(arg0)).*function; }
+
+template <typename Function, typename... Args>
+inline auto invoke(Function&& function, Args&&... args) -> decltype(forward<Function>(function)(forward<Args>(args)...)) { return forward<Function>(function)(forward<Args>(args)...); }
+
+template <typename T, typename... Args>
+struct invoke_return { typedef decltype(invoke(declval<T>(), declval<Args>()...)) type; };
+
+template <typename Return>
+struct invoke_void_return_wrapper {
+    template <typename... Args>
+    static Return __call(Args&&... args) { return invoke(forward<Args>(args)...); }
+};
+
+template <>
+struct invoke_void_return_wrapper<void> {
+    template <typename... Args>
+    static void __call(Args&&... args) { invoke(forward<Args>(args)...); }
+};
+
+}

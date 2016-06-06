@@ -1,15 +1,14 @@
 #pragma once
 
-#include <memory>
-#include <map>	
-#include <string>
-#include <functional>
-#include "container/all.h"
+#include "memory"
+#include "map"
+#include "string"
+#include "functional"
 
-#include "io/console.h"
+#include "console"
 #include "macros/string.h"
 
-#include "type_traits.h"
+#include "type_traits"
 
 namespace jang {
 
@@ -33,7 +32,7 @@ public:
 protected:
 
 private:
-	std::map<jang::string, std::unique_ptr<test_suite>> _test_suites;
+	map<string, unique_ptr<test_suite>> _test_suites;
 
 public:
 	test_registry(const self_type&) = delete;
@@ -46,7 +45,7 @@ public:
 	}
 
 	template <typename T, typename = enable_if_type<is_base_of<test_suite, T>::value>>
-	void insert(const jang::string& name, T* suite) { _test_suites[name] = std::unique_ptr<T>(suite); }
+	void insert(const string& name, T* suite) { _test_suites[name] = unique_ptr<T>(suite); }
 
 	void run() { _run(); }
 
@@ -57,7 +56,7 @@ private:
 
 	void _run();
 
-	const bool _menu(std::map<jang::string, std::unique_ptr<test_suite>>::const_iterator it);
+	const bool _menu(map<string, unique_ptr<test_suite>>::const_iterator it);
 
 	void _print_options() {
 		io::console::output_line(DEFAULT_COLOR_SCHEME, "Test Options:");
@@ -69,15 +68,15 @@ private:
 		io::console::output_line(DEFAULT_COLOR_SCHEME, "q <quit>\t\tto quit the test suite program");
 	}
 
-	const jang::string _center(const jang::string& name, const char& symbol) {
-		jang::string center(FIELD_SIZE / 2, symbol);
-		center += " " + name + jang::string(FIELD_SIZE / 2, symbol);
+	const string _center(const string& name, const char& symbol) {
+		string center(FIELD_SIZE / 2, symbol);
+		center += " " + name + string(FIELD_SIZE / 2, symbol);
 		return center;
 	}
 
-	void _header(const jang::string& name, const char& symbol) { io::console::output_line(DEFAULT_COLOR_SCHEME, _center(name, symbol)); }
+	void _header(const string& name, const char& symbol) { io::console::output_line(DEFAULT_COLOR_SCHEME, _center(name, symbol)); }
 
-	void _footer(const char& symbol) { io::console::output_line(DEFAULT_COLOR_SCHEME, jang::string(FIELD_SIZE, symbol), '\n'); }
+	void _footer(const char& symbol) { io::console::output_line(DEFAULT_COLOR_SCHEME, string(FIELD_SIZE, symbol), '\n'); }
 
 	void _results(const size_type& successes, const size_type& failures, const size_type& undecided) {
 		io::console::output_line();
@@ -106,7 +105,7 @@ public:
 
 	const size_type& failures() { return _failures; }
 
-	const std::map<jang::string, std::function<void()>>& tests() const { return _tests; }
+	const map<string, function<void()>>& tests() const { return _tests; }
 
 	void print_errors() {
 		for (auto diagnostic : _diagnostics) {
@@ -116,27 +115,27 @@ public:
 	}
 
 protected:
-	void add_diagnostic(const jang::string& message, const jang::string& file, const size_type& line) { _diagnostics.push_back(diagnostic(message, file, line)); }
+	void add_diagnostic(const string& message, const string& file, const size_type& line) { _diagnostics.push_back(diagnostic(message, file, line)); }
 
 protected:
-	std::map<jang::string, std::function<void()>> _tests;
+	map<string, function<void()>> _tests;
 
 	struct diagnostic {
-		diagnostic(const jang::string& message, const jang::string& file, const size_type& line) : _message(message), _file(file), _line(line) {}
+		diagnostic(const string& message, const string& file, const size_type& line) : _message(message), _file(file), _line(line) {}
 		~diagnostic() = default;
-		jang::string _message = "N/A";
-		jang::string _file = "N/A";
+		string _message = "N/A";
+		string _file = "N/A";
 		size_type _line = 0;
 	};
 
-	std::vector<diagnostic> _diagnostics;
+	vector<diagnostic> _diagnostics;
 
 	size_type _successes = 0, _failures = 0;
 };
 
-const bool test_registry::_menu(std::map<jang::string, std::unique_ptr<test_suite>>::const_iterator it) {
+const bool test_registry::_menu(map<string, unique_ptr<test_suite>>::const_iterator it) {
 	_print_options();
-	jang::string input = "";
+	string input = "";
 	io::console::input(input);
 
 	if (!input.compare("c") || !input.compare("continue")) {
@@ -239,10 +238,10 @@ void test_registry::_run() {
 
 #define ASSERT_NULL(a) ASSERT_EQUAL(a, NULL)
 
-#define ASSERT_NULLPTR(a) ASSERT_EQUAL(a, std::nullptr_t)
+#define ASSERT_NULLPTR(a) ASSERT_EQUAL(a, nullptr_t)
 
 #define ASSERT_NOT_NULL(a) ASSERT_NOT_EQUAL(a, NULL)
 
-#define ASSERT_NOT_NULLPTR(a) ASSERT_NOT_EQUAL(a, std::nullptr_t)
+#define ASSERT_NOT_NULLPTR(a) ASSERT_NOT_EQUAL(a, nullptr_t)
 
-} // ftl
+}

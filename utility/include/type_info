@@ -1,0 +1,46 @@
+#pragma once
+
+#include "exception"
+
+namespace jang {
+
+class type_info {
+public:
+protected:
+	const char* _type_name;
+	explicit type_info(const char* name) : _type_name(name) {}
+private:
+public:
+	type_info(const type_info&) = delete;
+	type_info(type_info&&) = delete;
+	virtual ~type_info() { if (_type_name) delete _type_name; }
+
+	type_info& operator=(const type_info&) = delete;
+
+	const char* name() const noexcept { return _type_name; }
+
+    bool before(const type_info& type_info) const noexcept { return _type_name < type_info._type_name; }
+
+    size_type hash_code() const noexcept { return *reinterpret_cast<const size_type*>(&_type_name); }
+
+    bool operator==(const type_info& type_info) const noexcept { return _type_name == type_info._type_name; }
+    bool operator!=(const type_info& type_info) const noexcept { return !operator==(type_info); }
+protected:
+private:
+};
+
+class bad_cast : public exception {
+public:
+    bad_cast() noexcept;
+    virtual ~bad_cast() noexcept;
+    virtual const char* what() const noexcept;
+};
+
+class bad_typeid : public exception {
+public:
+    bad_typeid() noexcept;
+    virtual ~bad_typeid() noexcept;
+    virtual const char* what() const noexcept;
+};	
+
+}

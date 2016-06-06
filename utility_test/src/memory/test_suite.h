@@ -1,10 +1,14 @@
 #pragma once
 
+<<<<<<< Updated upstream
 #include "utility.h"
 #include "container/all.h"
 #include "memory/cache.h"
 #include "exception/exception.h"
 #include "maths.h"
+=======
+#include "../../../utility/include/utility.h"
+>>>>>>> Stashed changes
 
 TEST_SUITE(memory) {
 	TEST(cache) {

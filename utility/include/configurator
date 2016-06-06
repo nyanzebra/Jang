@@ -3,7 +3,6 @@
 #include "json"
 
 namespace jang {
-namespace io {
 
 #ifdef _WIN32
 #define DEFAULT_CONFIG_FILE "C:/Users/Robert/Documents/Visual Studio 2015/Projects/FTLGameEngine/util/include/configuration/configuration_windows_32.json"	
@@ -36,5 +35,4 @@ private:
 	json::json _json;
 };
 
-} // io
 } // ftl

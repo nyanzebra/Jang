@@ -6,11 +6,13 @@
 
 namespace jang {
 
-template <typename T, typename Allocator>
-class vector : public container<random_access_iterator<T>, Allocator> {
+template <typename T, template <typename> typename Allocator>
+class vector : public container<T, random_access_iterator, Allocator> {
 public:
-	typedef vector<T, Allocator> self_type;
-	typedef container<random_access_iterator<T>, Allocator> parent_type;
+	typedef container<T, random_access_iterator, Allocator> container_type;
+	typedef Allocator<T> allocator_type;
+	typedef random_access_iterator<T> iterator_type;
+	typedef random_access_iterator<const T> const_iterator_type;
 
 protected:
 
@@ -24,9 +26,9 @@ public:
 	vector(size_type count, const allocator_type& allocator = allocator_type()) : vector(allocator) { reserve(count); }
 	template <typename InputIterator, typename = enable_if_type<is_iterator<InputIterator>::value>>
 	vector(InputIterator first, InputIterator last, const allocator_type& allocator = allocator_type()) { reserve(distance(first, last)); insert(begin(), first, last); }
-	vector(const self_type& other) : parent_type(other), _allocator(other.allocator), _backing_array(other._backing_array) {}
+	vector(const self_type& other) : container_type(other), _allocator(other.allocator), _backing_array(other._backing_array) {}
 	vector(const self_type& other, const allocator_type& allocator) : vector(other), vector(allocator) {}
-	vector(self_type&& other) : parent_type(other), _allocator(move(other.allocator)), _backing_array(move(other._backing_array)) {}
+	vector(self_type&& other) : container_type(other), _allocator(move(other.allocator)), _backing_array(move(other._backing_array)) {}
 	vector(self_type&& other, const allocator_type& allocator) : vector(other), vector(allocator) {}
 	vector(initializer_list<T> init, const allocator_type& allocator = allocator_type()) : vector(allocator) { insert(begin(), init); }
 	~vector() { clear(); };

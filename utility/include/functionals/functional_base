@@ -1,0 +1,82 @@
+#pragma once
+
+#include "../type_traits"
+#include "../utility"
+
+namespace jang {
+
+template <typename T>
+class hash {
+public:
+protected:
+private:
+public:
+	hash() = default;
+	hash(const hash&) = default;
+	hash(hash&&) = default;
+	~hash() = default;
+
+	hash& operator=(const hash&) = default;
+protected:
+private:
+};
+
+template <typename T> 
+T* address_of(T& x) noexcept { return (T*)&reinterpret_cast<const volatile char&>(x); }
+
+template <typename T, typename U = void>
+struct __is_transparent {
+private:
+  template <typename V> 
+  static auto result(...) -> decltype(false_type());
+  template <typename V> 
+  static auto result(typename V::is_transparent*) -> decltype(true_type()) { return true_type(); }
+public:
+    typedef decltype(result<T>(static_cast<T*>(nullptr))) type;
+    static const bool value = is_same_value<type, true_type>;
+};
+
+struct allocator_arg_type {};
+
+constexpr allocator_arg_type allocator_arg = allocator_arg_type();
+
+template <typename T>
+struct __has_allocator_type {
+private:
+  template <typename U> 
+  static auto result(...) -> decltype(false_type()) { return false_type(); }
+  template <typename U> 
+  static auto result(typename U::allocator_type*) -> decltype(true_type()) { return true_type(); }
+public:
+  typedef decltype(result<T>(static_cast<T*>(nullptr))) type;
+  static const bool value = is_same_value<type, true_type>;
+};
+
+template <typename T, typename Allocator, bool = __has_allocator_type<T>::value>
+struct __uses_allocator : public integral_constant<bool, is_convertible<Allocator, typename T::allocator_type>::value>{};
+
+template <typename T, typename Allocator>
+struct __uses_allocator<T, Allocator, false> : public false_type {};
+
+template <typename T, typename Allocator>
+struct uses_allocator : public __uses_allocator<T, Allocator>{};
+
+template <typename T, typename Allocator, typename... Args>
+struct __uses_alloc_ctor_imp { static const int value = uses_allocator<T, Allocator>::value ? 2 - is_constructible<T, allocator_arg_type, Allocator, Args...>::value : 0; };
+
+template <typename T, typename Allocator, typename... Args>
+struct __uses_alloc_ctor : integral_constant<int, __uses_alloc_ctor_imp<T, Allocator, Args...>::value> {};
+
+template <typename T, typename Allocator, typename... Args>
+inline void __user_alloc_construct_implementation (integral_constant<int, 0>, T* storage, const Allocator&, Args&&... args ) { new (storage) T(forward<Args>(args)...); }
+
+template <typename T, typename Allocator, typename... Args>
+inline void __user_alloc_construct_implementation (integral_constant<int, 1>, T *storage, const Allocator& allocator, Args &&... args ) { new (storage) T(allocator_arg, allocator, forward<Args>(args)...); }
+
+template <typename T, typename Allocator, typename... Args>
+inline void __user_alloc_construct_implementation (integral_constant<int, 2>, T *storage, const Allocator& allocator, Args &&... args ) { new (storage) T(forward<Args>(args)..., allocator); }
+
+template <typename T, typename Allocator, typename... Args>
+inline void __user_alloc_construct (T *storage, const Allocator &allocator, Args &&... args) { __user_alloc_construct_implementation(__uses_alloc_ctor<T, Allocator>(), storage, allocator, forward<Args>(args)...); }
+	
+}

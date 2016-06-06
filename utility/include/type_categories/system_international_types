@@ -1,0 +1,67 @@
+#pragma once
+
+#include "ampere_type"
+#include "temperature_types"
+#include "metre_type"
+#include "gram_type"
+#include "candela_type"
+#include "mole_type"
+#include "time_types"
+#include "litre_type"
+
+namespace jang {
+	
+
+namespace {	
+	
+// constexpr long double operator"" _type(long double value)  { return value; }
+
+// constexpr long double operator"" _deci_type(long double value) { return operator"" _type(value) / 10; }
+// constexpr long double operator"" _centi_type(long double value) { return operator"" _deci_type(value) / 10; }
+// constexpr long double operator"" _milli_type(long double value) { return operator"" _centi_type(value) / 10; }
+// constexpr long double operator"" _micro_type(long double value) { return operator"" _milli_type(value) / 10; }
+// constexpr long double operator"" _nano_type(long double value) { return operator"" _micro_type(value) / 10; }
+// constexpr long double operator"" _pico_type(long double value) { return operator"" _nano_type(value) / 10; }
+// constexpr long double operator"" _femto_type(long double value) { return operator"" _pico_type(value) / 10; }
+// constexpr long double operator"" _atto_type(long double value) { return operator"" _femto_type(value) / 10; }
+// constexpr long double operator"" _zepto_type(long double value) { return operator"" _atto_type(value) / 10; }
+// constexpr long double operator"" _yocto_type(long double value) { return operator"" _zepto_type(value) / 10; }
+
+// constexpr long double operator"" _deka_type(long double value) { return operator"" _type(value) * 10; }
+// constexpr long double operator"" _hecto_type(long double value) { return operator"" _deka_type(value) * 10; }
+// constexpr long double operator"" _kilo_type(long double value) { return operator"" _hecto_type(value) * 10; }
+// constexpr long double operator"" _mega_type(long double value) { return operator"" _kilo_type(value) * 10; }
+// constexpr long double operator"" _giga_type(long double value) { return operator"" _mega_type(value) * 10; }
+// constexpr long double operator"" _tera_type(long double value) { return operator"" _giga_type(value) * 10; }
+// constexpr long double operator"" _peta_type(long double value) { return operator"" _tera_type(value) * 10; }
+// constexpr long double operator"" _exa_type(long double value) { return operator"" _peta_type(value) * 10; }
+// constexpr long double operator"" _zetta_type(long double value) { return operator"" _exa_type(value) * 10; }
+// constexpr long double operator"" _yotta_type(long double value) { return operator"" _zetta_type(value) * 10; }
+
+// constexpr long double operator"" _type(unsigned long long int value)  { return value; }
+
+// constexpr long double operator"" _deci_type(unsigned long long int value) { return operator"" _type(value) / 10; }
+// constexpr long double operator"" _centi_type(unsigned long long int value) { return operator"" _deci_type(value) / 10; }
+// constexpr long double operator"" _milli_type(unsigned long long int value) { return operator"" _centi_type(value) / 10; }
+// constexpr long double operator"" _micro_type(unsigned long long int value) { return operator"" _milli_type(value) / 10; }
+// constexpr long double operator"" _nano_type(unsigned long long int value) { return operator"" _micro_type(value) / 10; }
+// constexpr long double operator"" _pico_type(unsigned long long int value) { return operator"" _nano_type(value) / 10; }
+// constexpr long double operator"" _femto_type(unsigned long long int value) { return operator"" _pico_type(value) / 10; }
+// constexpr long double operator"" _atto_type(unsigned long long int value) { return operator"" _femto_type(value) / 10; }
+// constexpr long double operator"" _zepto_type(unsigned long long int value) { return operator"" _atto_type(value) / 10; }
+// constexpr long double operator"" _yocto_type(unsigned long long int value) { return operator"" _zepto_type(value) / 10; }
+
+// constexpr long double operator"" _deka_type(unsigned long long int value) { return operator"" _type(value) * 10; }
+// constexpr long double operator"" _hecto_type(unsigned long long int value) { return operator"" _deka_type(value) * 10; }
+// constexpr long double operator"" _kilo_type(unsigned long long int value) { return operator"" _hecto_type(value) * 10; }
+// constexpr long double operator"" _mega_type(unsigned long long int value) { return operator"" _kilo_type(value) * 10; }
+// constexpr long double operator"" _giga_type(unsigned long long int value) { return operator"" _mega_type(value) * 10; }
+// constexpr long double operator"" _tera_type(unsigned long long int value) { return operator"" _giga_type(value) * 10; }
+// constexpr long double operator"" _peta_type(unsigned long long int value) { return operator"" _tera_type(value) * 10; }
+// constexpr long double operator"" _exa_type(unsigned long long int value) { return operator"" _peta_type(value) * 10; }
+// constexpr long double operator"" _zetta_type(unsigned long long int value) { return operator"" _exa_type(value) * 10; }
+// constexpr long double operator"" _yotta_type(unsigned long long int value) { return operator"" _zetta_type(value) * 10; }
+
+}
+
+}

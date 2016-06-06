@@ -1,0 +1,111 @@
+#pragma once
+
+#include "atomic_wrappers"
+
+namespace jang {
+
+template <typename T, bool = is_integral<T>::value && !is_same<T, bool>::value>
+class atomic_base {
+public:
+protected:
+	mutable atomic_type(T) _atomic;
+private:
+public:
+    atomic_base() noexcept : _atomic() {}
+    constexpr atomic_base(T value) noexcept : _atomic(value) {}
+    atomic_base(const atomic_base&) = delete;
+    ~atomic_base() = default;
+
+    atomic_base& operator=(const atomic_base&) = delete;
+    atomic_base& operator=(const atomic_base&) volatile = delete;
+
+	bool is_lock_free() const volatile noexcept { return __c11_atomic_is_lock_free(sizeof(T)); }
+	bool is_lock_free() const noexcept { return static_cast<const volatile atomic_base*>(this)->is_lock_free(); }
+	
+	void store(T value, memory_order order = memory_order::sequential_consistency) volatile noexcept { atomic_store(&_atomic, value, order); }
+	void store(T value, memory_order order = memory_order::sequential_consistency) noexcept { atomic_store(&_atomic, value, order); }
+    
+    T load(memory_order order = memory_order::sequential_consistency) const volatile noexcept { return atomic_load(&_atomic, order); }
+    T load(memory_order order = memory_order::sequential_consistency) const noexcept { return atomic_load(&_atomic, order); }
+    
+    operator T() const volatile noexcept { return load(); }
+    operator T() const noexcept { return load(); }
+    
+    T exchange(T value, memory_order order = memory_order::sequential_consistency) volatile noexcept { return atomic_exchange(&_atomic, value, order); }
+    T exchange(T value, memory_order order = memory_order::sequential_consistency) noexcept { return atomic_exchange(&_atomic, value, order); }
+    
+    bool compare_exchange_weak(T& expected, T value, memory_order success, memory_order failure) volatile noexcept { return atomic_compare_exchange_weak(&_atomic, &expected, value, success, failure); }
+    bool compare_exchange_weak(T& expected, T value, memory_order success, memory_order failure) noexcept { return atomic_compare_exchange_weak(&_atomic, &expected, value, success, failure); }
+    bool compare_exchange_weak(T& expected, T value, memory_order order = memory_order::sequential_consistency) volatile noexcept { return atomic_compare_exchange_weak(&_atomic, &expected, value, order, order); }
+    bool compare_exchange_weak(T& expected, T value, memory_order order = memory_order::sequential_consistency) noexcept { return atomic_compare_exchange_weak(&_atomic, &expected, value, order, order); }
+    
+    bool compare_exchange_strong(T& expected, T value, memory_order success, memory_order failure) volatile noexcept { return atomic_compare_exchange_strong(&_atomic, &expected, value, success, failure); }
+    bool compare_exchange_strong(T& expected, T value, memory_order success, memory_order failure) noexcept { return atomic_compare_exchange_strong(&_atomic, &expected, value, success, failure); }
+    bool compare_exchange_strong(T& expected, T value, memory_order order = memory_order::sequential_consistency) volatile noexcept { return atomic_compare_exchange_strong(&_atomic, &expected, value, order, order); }
+    bool compare_exchange_strong(T& expected, T value, memory_order order = memory_order::sequential_consistency) noexcept { return atomic_compare_exchange_strong(&_atomic, &expected, value, order, order); }
+
+protected:
+private:
+};
+
+template <typename T>
+struct atomic_base<T, true> : public atomic_base<T, false> {
+public:
+protected:
+private:
+public:
+	atomic_base() noexcept = default;
+	constexpr atomic_base(T value) noexcept : atomic_base<T, false>(value) {}
+	atomic_base(const atomic_base&) = default;
+	atomic_base(atomic_base&&) = default;
+	~atomic_base() = default;
+
+	atomic_base& operator=(const atomic_base&) = default;
+
+    T fetch_add(T operand, memory_order order = memory_order::sequential_consistency) volatile noexcept { return atomic_fetch_add(&this->_atomic, operand, order); }  
+    T fetch_add(T operand, memory_order order = memory_order::sequential_consistency) noexcept { return atomic_fetch_add(&this->_atomic, operand, order); }
+  
+    T fetch_sub(T operand, memory_order order = memory_order::sequential_consistency) volatile noexcept { return atomic_fetch_sub(&this->_atomic, operand, order); }
+    T fetch_sub(T operand, memory_order order = memory_order::sequential_consistency) noexcept { return atomic_fetch_sub(&this->_atomic, operand, order); }
+  
+    T fetch_and(T operand, memory_order order = memory_order::sequential_consistency) volatile noexcept { return atomic_fetch_and(&this->_atomic, operand, order); }
+    T fetch_and(T operand, memory_order order = memory_order::sequential_consistency) noexcept { return atomic_fetch_and(&this->_atomic, operand, order); }
+  
+    T fetch_or(T operand, memory_order order = memory_order::sequential_consistency) volatile noexcept { return atomic_fetch_or(&this->_atomic, operand, order); }  
+    T fetch_or(T operand, memory_order order = memory_order::sequential_consistency) noexcept { return atomic_fetch_or(&this->_atomic, operand, order); }
+  
+    T fetch_xor(T operand, memory_order order = memory_order::sequential_consistency) volatile noexcept { return atomic_fetch_xor(&this->_atomic, operand, order); }  
+    T fetch_xor(T operand, memory_order order = memory_order::sequential_consistency) noexcept { return atomic_fetch_xor(&this->_atomic, operand, order); }
+
+  
+    T operator++(int) volatile noexcept { return fetch_add(T(1)); }  
+    T operator++(int) noexcept { return fetch_add(T(1)); }
+  
+    T operator--(int) volatile noexcept { return fetch_sub(T(1)); }  
+    T operator--(int) noexcept { return fetch_sub(T(1)); }
+  
+    T operator++() volatile noexcept { return fetch_add(T(1)) + T(1); }  
+    T operator++() noexcept { return fetch_add(T(1)) + T(1); }
+  
+    T operator--() volatile noexcept { return fetch_sub(T(1)) - T(1); }  
+    T operator--() noexcept { return fetch_sub(T(1)) - T(1); }
+  
+    T operator+=(T operand) volatile noexcept { return fetch_add(operand) + operand; }  
+    T operator+=(T operand) noexcept { return fetch_add(operand) + operand; }
+  
+    T operator-=(T operand) volatile noexcept { return fetch_sub(operand) - operand; }  
+    T operator-=(T operand) noexcept { return fetch_sub(operand) - operand; }
+  
+    T operator&=(T operand) volatile noexcept { return fetch_and(operand) & operand; }  
+    T operator&=(T operand) noexcept { return fetch_and(operand) & operand; }
+  
+    T operator|=(T operand) volatile noexcept { return fetch_or(operand) | operand; }  
+    T operator|=(T operand) noexcept { return fetch_or(operand) | operand; }
+  
+    T operator^=(T operand) volatile noexcept { return fetch_xor(operand) ^ operand; }  
+    T operator^=(T operand) noexcept { return fetch_xor(operand) ^ operand; }
+protected:
+private:
+};
+
+}

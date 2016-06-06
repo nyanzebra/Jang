@@ -1,0 +1,13 @@
+#pragma once
+
+#include "invoke"
+
+namespace jang {
+
+template <typename Callable> 
+struct result_of;
+
+template <typename Function, typename... Args>
+struct result_of<Function(Args...)> : public invoke_of<Function, Args...> {};
+
+}

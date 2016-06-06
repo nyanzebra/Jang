@@ -1,0 +1,137 @@
+#pragma once
+
+#include "../type_traits_categories/type_properties"
+#include "../type_traits_categories/sign_modifiers"
+#include "../utility"
+
+#include <assert.h>
+
+namespace jang {
+
+template <typename T>
+constexpr T greatest_common_denominator(T x, T y) { return (y == 0 ? (x == 0 ? 1 : x) : greatest_common_denominator<T>(y, x % y)); }
+
+template <typename T>
+constexpr T least_common_multiple(T x, T y) { return x / (greatest_common_denominator<T>(x, y) * y); }
+
+template <typename T>
+constexpr auto absolute_value(T x) -> decltype((x < 0) ? -x : x) { return (x < 0) ? -forward<T>(x) : forward<T>(x); }
+
+template <typename T>
+constexpr const bool is_negative(T x) noexcept { return x < 0; }
+
+template <typename T>
+constexpr const bool is_positive(T x) noexcept { return x > 0; }
+
+template <typename T>
+constexpr const char sign_of(T x) noexcept { return (is_negative(forward<T>(x)) ? -1 : (is_positive(forward<T>(x)) ? 1 : 0)); }
+
+template <typename T>
+constexpr static const T maximum() noexcept {
+	if (is_unsigned_value<T>) {
+		return T(-1);
+	}
+	return make_unsigned_type<T>(-1) / 2;
+}
+
+template <typename T>
+constexpr static const T minimum() noexcept {
+	if (is_unsigned_value<T>) {
+		return T(0);
+	}
+	return -(maximum<T>() + 1);
+}
+
+template <typename T, typename U>
+auto add(T x, U y) noexcept -> decltype(x + y) {
+	typedef decltype(x + y) type;
+
+	if (is_positive(y)) {
+		assert(x <= maximum<type>() - y);
+	}
+	if (is_negative(y)) {
+		assert(minimum<type>() - y <= x);
+	}
+
+	return forward<T>(x) + forward<U>(y);
+}
+
+template <typename T, typename U>
+auto subtract(T x, U y) noexcept -> decltype(x + y) {
+	typedef decltype(x - y) type;
+
+	if (is_positive(y)) {
+		assert(y + minimum<type>() <= x);
+	}
+	if (is_negative(y)) {
+		assert(x <= maximum<type>() + y);
+	}
+
+	return forward<T>(x) - forward<U>(y);
+}
+
+template <typename T, typename U>
+auto multiply(T x, U y) noexcept -> decltype(x * y) {
+	typedef decltype(x * y) type;
+
+	assert(x != minimum<type>() - 1 && y != minimum<type>() - 1 && absolute_value(x) <= maximum<T>() / absolute_value(y)); 
+	
+	return forward<T>(x) * forward<U>(y);
+}
+
+template <typename T, typename U>
+auto divide(T x, U y) noexcept -> decltype(x + y) {
+	typedef decltype(x / y) type;
+
+	assert(x != minimum<type>() - 1 && y != minimum<type>() - 1 && y != 0); 
+	
+	return forward<T>(x) / forward<U>(y);
+}
+
+template <typename T, typename U>
+constexpr auto modulo(T x, U y) noexcept -> decltype(x % y) { return forward<T>(x) % forward<U>(y); };
+
+
+template <typename T>
+constexpr auto negate(T x) noexcept -> decltype(-x) { return -forward<T>(x); }
+
+template <typename T, typename U>
+constexpr auto equal_to(T x, U y) noexcept -> decltype(x == y) { return forward<T>(x) == forward<U>(y); }
+
+template <typename T, typename U>
+constexpr auto not_equal_to(T x, U y) noexcept { return forward<T>(x) != forward<U>(y); }
+
+template <typename T, typename U>
+constexpr auto greater_than(T x, U y) noexcept -> decltype(x > y) { return forward<T>(x) > forward<U>(y); }
+
+template <typename T, typename U>
+constexpr auto less_than(T x, U y) noexcept -> decltype(x < y) { return forward<T>(x) < forward<U>(y); } 
+
+template <typename T, typename U>
+constexpr auto greater_than_or_equal(T x, U y) noexcept -> decltype(x >= y) { return forward<T>(x) >= forward<U>(y); }
+
+template <typename T, typename U>
+constexpr auto less_than_or_equal(T x, U y) noexcept -> decltype(x <= y) { return forward<T>(x) <= forward<U>(y); }
+
+template <typename T, typename U>
+constexpr auto logical_and(T x, U y) noexcept -> decltype(x && y) { return forward<T>(x) && forward<U>(y); }
+
+template <typename T, typename U>
+constexpr auto logical_or(T x, U y) noexcept -> decltype(x || y) { return forward<T>(x) || forward<U>(y); }
+
+template <typename T>
+constexpr auto logical_not(T x) noexcept -> decltype(!x) { return !forward<T>(x); }
+
+template <typename T, typename U>
+constexpr auto bit_and(T x, U y) noexcept -> decltype(x & y) { return forward<T>(x) & forward<U>(y); }
+
+template <typename T, typename U>
+constexpr auto bit_or(T x, U y) noexcept -> decltype(x | y) { return forward<T>(x) | forward<U>(y); }
+
+template <typename T, typename U>
+constexpr auto bit_xor(T x, U y) noexcept -> decltype(x ^ y) { return forward<T>(x) ^ forward<U>(y); }
+
+template <typename T>
+constexpr auto bit_not(T x) noexcept -> decltype(~x) { return ~forward<T>(x); }
+
+}

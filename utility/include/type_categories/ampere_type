@@ -1,0 +1,53 @@
+#pragma once
+
+namespace jang {
+	
+constexpr long double operator"" _ampere_type(long double value)  { return value; }
+
+constexpr long double operator"" _deci_ampere_type(long double value) { return operator"" _ampere_type(value) / 10; }
+constexpr long double operator"" _centi_ampere_type(long double value) { return operator"" _deci_ampere_type(value) / 10; }
+constexpr long double operator"" _milli_ampere_type(long double value) { return operator"" _centi_ampere_type(value) / 10; }
+constexpr long double operator"" _micro_ampere_type(long double value) { return operator"" _milli_ampere_type(value) / 10; }
+constexpr long double operator"" _nano_ampere_type(long double value) { return operator"" _micro_ampere_type(value) / 10; }
+constexpr long double operator"" _pico_ampere_type(long double value) { return operator"" _nano_ampere_type(value) / 10; }
+constexpr long double operator"" _femto_ampere_type(long double value) { return operator"" _pico_ampere_type(value) / 10; }
+constexpr long double operator"" _atto_ampere_type(long double value) { return operator"" _femto_ampere_type(value) / 10; }
+constexpr long double operator"" _zepto_ampere_type(long double value) { return operator"" _atto_ampere_type(value) / 10; }
+constexpr long double operator"" _yocto_ampere_type(long double value) { return operator"" _zepto_ampere_type(value) / 10; }
+
+constexpr long double operator"" _deka_ampere_type(long double value) { return operator"" _ampere_type(value) * 10; }
+constexpr long double operator"" _hecto_ampere_type(long double value) { return operator"" _deka_ampere_type(value) * 10; }
+constexpr long double operator"" _kilo_ampere_type(long double value) { return operator"" _hecto_ampere_type(value) * 10; }
+constexpr long double operator"" _mega_ampere_type(long double value) { return operator"" _kilo_ampere_type(value) * 10; }
+constexpr long double operator"" _giga_ampere_type(long double value) { return operator"" _mega_ampere_type(value) * 10; }
+constexpr long double operator"" _tera_ampere_type(long double value) { return operator"" _giga_ampere_type(value) * 10; }
+constexpr long double operator"" _peta_ampere_type(long double value) { return operator"" _tera_ampere_type(value) * 10; }
+constexpr long double operator"" _exa_ampere_type(long double value) { return operator"" _peta_ampere_type(value) * 10; }
+constexpr long double operator"" _zetta_ampere_type(long double value) { return operator"" _exa_ampere_type(value) * 10; }
+constexpr long double operator"" _yotta_ampere_type(long double value) { return operator"" _zetta_ampere_type(value) * 10; }
+
+constexpr long double operator"" _ampere_type(unsigned long long int value)  { return value; }
+
+constexpr long double operator"" _deci_ampere_type(unsigned long long int value) { return operator"" _ampere_type(value) / 10; }
+constexpr long double operator"" _centi_ampere_type(unsigned long long int value) { return operator"" _deci_ampere_type(value) / 10; }
+constexpr long double operator"" _milli_ampere_type(unsigned long long int value) { return operator"" _centi_ampere_type(value) / 10; }
+constexpr long double operator"" _micro_ampere_type(unsigned long long int value) { return operator"" _milli_ampere_type(value) / 10; }
+constexpr long double operator"" _nano_ampere_type(unsigned long long int value) { return operator"" _micro_ampere_type(value) / 10; }
+constexpr long double operator"" _pico_ampere_type(unsigned long long int value) { return operator"" _nano_ampere_type(value) / 10; }
+constexpr long double operator"" _femto_ampere_type(unsigned long long int value) { return operator"" _pico_ampere_type(value) / 10; }
+constexpr long double operator"" _atto_ampere_type(unsigned long long int value) { return operator"" _femto_ampere_type(value) / 10; }
+constexpr long double operator"" _zepto_ampere_type(unsigned long long int value) { return operator"" _atto_ampere_type(value) / 10; }
+constexpr long double operator"" _yocto_ampere_type(unsigned long long int value) { return operator"" _zepto_ampere_type(value) / 10; }
+
+constexpr long double operator"" _deka_ampere_type(unsigned long long int value) { return operator"" _ampere_type(value) * 10; }
+constexpr long double operator"" _hecto_ampere_type(unsigned long long int value) { return operator"" _deka_ampere_type(value) * 10; }
+constexpr long double operator"" _kilo_ampere_type(unsigned long long int value) { return operator"" _hecto_ampere_type(value) * 10; }
+constexpr long double operator"" _mega_ampere_type(unsigned long long int value) { return operator"" _kilo_ampere_type(value) * 10; }
+constexpr long double operator"" _giga_ampere_type(unsigned long long int value) { return operator"" _mega_ampere_type(value) * 10; }
+constexpr long double operator"" _tera_ampere_type(unsigned long long int value) { return operator"" _giga_ampere_type(value) * 10; }
+constexpr long double operator"" _peta_ampere_type(unsigned long long int value) { return operator"" _tera_ampere_type(value) * 10; }
+constexpr long double operator"" _exa_ampere_type(unsigned long long int value) { return operator"" _peta_ampere_type(value) * 10; }
+constexpr long double operator"" _zetta_ampere_type(unsigned long long int value) { return operator"" _exa_ampere_type(value) * 10; }
+constexpr long double operator"" _yotta_ampere_type(unsigned long long int value) { return operator"" _zetta_ampere_type(value) * 10; }
+	
+}

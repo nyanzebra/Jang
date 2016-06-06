@@ -1,79 +1,30 @@
 #pragma once
 
-#include "type_traits"
-#include "exception"
-#include "allocator"
 #include "container"
 
 namespace jang {
 
 template <typename T, size_type N>
-class array : public container<random_access_iterator<T>, allocator<T>> {
-public:
-	typedef array<T, N> self_type;
-	typedef random_access_iterator<T> iterator_type;
-	typedef container<iterator_type> parent_type;
+using array = fixed_length_container<T, N>;
 
-protected:
-
-private:
-	template <typename Iterator>
-
-public:
-	array() : parent_type(N,new T[N]), _end(iterator_type(_ptr + N)) {}
-	array(const self_type&) = default;
-	array(self_type&&) = default;
-	~array() { delete[] _ptr; }
-
-	self_type& operator=(const self_type&) = default;
-
-	constexpr T& at(size_type pos) { if (pos < size()) return *(begin() + pos); else throw out_of_range(); }	
-	constexpr const T& at(size_type pos) const { if (pos < size()) return *(begin() + pos); else throw out_of_range(); }
-
-
-	constexpr T& operator[](size_type pos) { return *(begin() + pos); }	 
-	constexpr const T& operator[](size_type pos) const { return *(begin() + pos); }
-
-
-	constexpr T& front() { return *(begin()); }		 
-	constexpr const T& front() const { return *(begin()); }
-
-
-	constexpr T& back() { return *(end()--); }	   
-	constexpr const T& back() const { return *(end()--); }
-
-
-	constexpr T* data() { return _ptr; }	
-	constexpr const T* data() const { return _ptr; }
-
-
-	void fill(const T& value) {
-		for (size_type i = 0; i < parent_type::size(); ++i) {
-			at(i) = value;
-		}
-	}
-
-
-	void swap(self_type& other) {
-		for (size_type i = 0; i < (other.size() < size() ? other.size() : size()); ++i) {
-			swap(at(i), other.at(i));
-		}
-	}
-
-protected:
-
-private:
-
-	void reserve(size_type cap) {
-		T* updated_backing_array = new T[cap];
-		for (size_type i = 0; i < (cap < size() ? cap : size()); ++i) {
-			swap(_ptr[i], updated_backing_array[i]);
-		}
-		_ptr = updated_backing_array;
-		_size = cap;
-	}
-
-};
+//template <typename T, size_type N>
+//class array : public fixed_length_container<T, N> {
+//public:
+//protected:
+//private:
+//public:
+//	array() = default;
+//	array(const array&) = default;
+//	array(array&&) = default;
+//	template <typename ForwardIterator>
+//	array(ForwardIterator first, ForwardIterator last) : fixed_length_container<T, N>(first, last) {}
+//	array(initializer_list<T> init) : fixed_length_container<T, N>(init.begin(), init.end()) {}
+//	~array() = default;
+//
+//	
+//protected:
+//private:
+//};
 
 }
 

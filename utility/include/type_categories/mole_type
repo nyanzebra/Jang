@@ -1,0 +1,7 @@
+#pragma once
+
+namespace jang {
+
+#define AVOGADRO_CONSTANT (6.02214085774 * 10)
+	
+}

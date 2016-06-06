@@ -1,0 +1,10 @@
+#pragma once
+
+namespace jang {
+	
+struct concurrency_object_type {};
+struct mutex_object_type : public concurrency_object_type {};
+struct semaphore_object_type : public concurrency_object_type {};
+struct conditional_variable_object_type : public concurrency_object_type {};
+
+}

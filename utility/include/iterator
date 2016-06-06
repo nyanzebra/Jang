@@ -1,6 +1,6 @@
 #pragma once
 
-#include "type_traits"
+#include "types"
 
 namespace jang {
 
@@ -11,164 +11,270 @@ struct forward_iterator_tag : input_iterator_tag, output_iterator_tag {};
 struct bidirectional_iterator_tag : forward_iterator_tag {};
 struct random_access_iterator_tag : bidirectional_iterator_tag {};
 
+template <typename InputIterator>
+void advance(InputIterator& it, difference_type distance, input_iterator_tag) { while (distance-- > 0) ++it; }
+
+template <typename BidirectionalIterator>
+void advance(BidirectionalIterator& it, difference_type distance, bidirectional_iterator_tag) {
+    if (distance >= 0) {
+        while (distance-- > 0) ++it;
+    } else {
+        while (distance++ < 0) --it;
+    }
+}
+
+template <typename RandomAccessIterator>
+void advance(RandomAccessIterator& it, difference_type distance, random_access_iterator_tag) { it += distance; }
+
+template <typename InputIterator>
+void advance(InputIterator& it, difference_type distance) { typedef typename InputIterator::category category; advance(it, distance, category{}); }
+
+template <typename InputIterator>
+difference_type distance(InputIterator first, InputIterator last, input_iterator_tag) {
+    difference_type result(0);
+    while (first++ != last) ++result;
+    return result;
+}
+
+template <typename RandomAccessIterator>
+difference_type distance(RandomAccessIterator first, RandomAccessIterator last, random_access_iterator_tag) { return last - first; }
+
+template <typename InputIterator>
+difference_type distance(InputIterator first, InputIterator last) { typedef typename InputIterator::category category; return distance(first, last, category{}); }
+
+template <typename Iterator>
+Iterator next(Iterator it, difference_type distance, iterator_tag) { return it; }
+
+template <typename Iterator>
+Iterator next(Iterator it, difference_type distance, forward_iterator_tag) { advance(it, distance); return it; }
+
+template <typename Iterator>
+Iterator next(Iterator it, difference_type distance = 1) { typedef typename Iterator::category category; return next(it, distance, category{}); }
+
+template <typename Iterator>
+Iterator prev(Iterator it, difference_type distance, iterator_tag) { advance(it, -distance); return it; }
+
+template <typename Iterator>
+Iterator prev(Iterator it, difference_type distance, bidirectional_iterator_tag) { advance(it, -distance); return it; }
+
+template <typename Iterator>
+Iterator prev(Iterator it, difference_type distance = 1) { return prev(it, -distance); }
+
 template <typename T>
 class iterator {
 public:
-	typedef iterator_tag iterator_category;
+	typedef iterator_tag category;
 	typedef T type;
-
 protected:
-	type* _ptr;
-
+	T* _pointer;
 private:
-
 public:
-	iterator(const type& val) { _ptr = new type(val); }
-	iterator(type&& val) { _ptr = new type(move(val)); }
-	iterator(const iterator& other) : _ptr(other._ptr) {}
-	iterator(iterator&& other) : _ptr(move(other._ptr)) {}
-	virtual ~iterator() { if (_ptr) delete _ptr; }
+	iterator() : _pointer(nullptr) {}
+	iterator(T* pointer) : _pointer(pointer) {}
+	iterator(const iterator&) = default;
+	iterator(iterator&&) = default;
+	virtual ~iterator() = default;
 
-	constexpr iterator& operator=(const iterator& other) { _ptr = other._ptr; return *this; }
+	template <typename Iterator>
+	constexpr iterator& operator=(const Iterator& other) { _pointer = other._pointer; return *this; }
+	
+	template <typename Iterator>
+	constexpr iterator& operator=(Iterator&& other) { _pointer = other._pointer; return *this; }
 
-	constexpr type& operator*() { return *_ptr; }
+	constexpr T& operator*() { return *_pointer; }
 
-	constexpr iterator& operator++() { ++_ptr; return *this; }
+	constexpr iterator& operator++() { ++_pointer; return *this; }
 
-	constexpr friend void swap(iterator& lhs, iterator& rhs) { auto temp = lhs._ptr; lhs._ptr = rhs._ptr; rhs._pointer = temp; }
+	template <typename Iterator0, typename Iterator1>
+	constexpr friend void swap(Iterator0& lhs, Iterator1& rhs) { auto temp = lhs._pointer; lhs._pointer = rhs._pointer; rhs._pointer = temp; }
 };
 
 template <typename T>
 class input_iterator : public virtual iterator<T> {
 public:
-	using iterator<T>::iterator;
-
-	typedef input_iterator_tag iterator_category;
+	typedef input_iterator_tag category;
 	typedef T type;
-
+	using iterator<T>::operator*;
+	using iterator<T>::operator=;
 protected:
-
+	using iterator<T>::_pointer;
 private:
-
 public:
+	input_iterator() = default;
+	input_iterator(T* pointer) : iterator<T>(pointer) {}
 	input_iterator(const input_iterator&) = default;
 	input_iterator(input_iterator&&) = default;
 	virtual ~input_iterator() = default;
 
 	constexpr friend bool operator!=(const input_iterator& lhs, const input_iterator& rhs) { return !(lhs == rhs); }
+	
+	constexpr friend bool operator==(const input_iterator& lhs, const input_iterator& rhs) { return lhs._pointer == rhs._pointer; }
 
-	constexpr friend bool operator==(const input_iterator& lhs, const input_iterator& rhs) { return lhs._ptr == rhs._ptr; }
+	constexpr T operator*() const { return *_pointer; }
 
+	constexpr T* operator->() const { return _pointer; }
 
-	constexpr type operator*() { return *_ptr; }
+	constexpr input_iterator& operator++() { ++_pointer; return *this; }
 
-	constexpr type* operator->() const { return _ptr; }
-
-
-	constexpr input_iterator& operator++(int) { auto save = *this; _ptr++; return save; }
+	constexpr input_iterator operator++(int) { auto save = *this; _pointer++; return save; }
+protected:
+private:
 };
 
 template <typename T>
 class output_iterator : public virtual iterator<T> {
 public:
-	using iterator<T>::iterator;
-
-	typedef output_iterator_tag iterator_category;
+	typedef output_iterator_tag category;
 	typedef T type;
 
+	using iterator<T>::operator*;
+	using iterator<T>::operator=;
 protected:
-
+	using iterator<T>::_pointer;
 private:
-
 public:
+	output_iterator() = default;
+	output_iterator(T* pointer) : iterator<T>(pointer) {}
 	output_iterator(const output_iterator&) = default;
 	output_iterator(output_iterator&&) = default;
 	virtual ~output_iterator() = default;
 
-	constexpr output_iterator& operator++(int) { auto save = *this; _ptr++; return save; }
+	constexpr output_iterator& operator++() { ++_pointer; return *this; }
+
+	constexpr output_iterator operator++(int) { auto save = *this; _pointer++; return save; }
+protected:
+private:
 };
 
 template <typename T>
 class forward_iterator : public input_iterator<T>, public output_iterator<T> {
 public:
-	using input_iterator<T>::input_iterator;  
-	using output_iterator<T>::output_iterator;
-
-	typedef forward_iterator_tag iterator_category;
+	typedef forward_iterator_tag category;
 	typedef T type;
 
+	using iterator<T>::operator*;
+	using iterator<T>::operator=;
+	using input_iterator<T>::operator->;
+	using input_iterator<T>::operator*;
 protected:
-
+	using input_iterator<T>::_pointer;
 private:
-
 public:
+	forward_iterator() = default;
+	forward_iterator(T* pointer) : iterator<T>(pointer) {}
 	forward_iterator(const forward_iterator&) = default;
 	forward_iterator(forward_iterator&&) = default;
 	virtual ~forward_iterator() = default;
+
+	constexpr friend bool operator!=(const forward_iterator& lhs, const forward_iterator& rhs) { return !(lhs == rhs); }
+	
+	constexpr friend bool operator==(const forward_iterator& lhs, const forward_iterator& rhs) { return lhs._pointer == rhs._pointer; }
+
+	constexpr forward_iterator& operator++() { ++_pointer; return *this; }
+
+	constexpr forward_iterator operator++(int) { auto save = *this; _pointer++; return save; }
+protected:
+private:
 };
 
 template <typename T>
 class bidirectional_iterator : public forward_iterator<T> {
 public:
-	using forward_iterator<T>::forward_iterator;
-
-	typedef bidirectional_iterator_tag iterator_category;
+	typedef bidirectional_iterator_tag category;
 	typedef T type;
 
+	using iterator<T>::operator*;
+	using iterator<T>::operator=;
+	using input_iterator<T>::operator->;
+	using input_iterator<T>::operator*;
 protected:
-
+	using forward_iterator<T>::_pointer;
 private:
-
 public:
+	bidirectional_iterator() = default;
+	bidirectional_iterator(T* pointer) : iterator<T>(pointer) {}
 	bidirectional_iterator(const bidirectional_iterator&) = default;
 	bidirectional_iterator(bidirectional_iterator&&) = default;
 	virtual ~bidirectional_iterator() = default;
 
-	constexpr bidirectional_iterator& operator--() { --_ptr; return *this; }
+	constexpr friend bool operator!=(const bidirectional_iterator& lhs, const bidirectional_iterator& rhs) { return !(lhs == rhs); }
+	
+	constexpr friend bool operator==(const bidirectional_iterator& lhs, const bidirectional_iterator& rhs) { return lhs._pointer == rhs._pointer; }
 
-	constexpr bidirectional_iterator& operator--(int) { auto save = *this; _ptr--; return save; }
+	constexpr bidirectional_iterator& operator++() { ++_pointer; return *this; }
+
+	constexpr bidirectional_iterator operator++(int) { auto save = *this; _pointer++; return save; }
+
+	constexpr bidirectional_iterator& operator--() { --_pointer; return *this; }
+
+	constexpr bidirectional_iterator& operator--(int) { auto save = *this; _pointer--; return save; }
 };
 
 template <typename T>
 class random_access_iterator : public bidirectional_iterator<T> {
 public:
-	using bidirectional_iterator<T>::bidirectional_iterator;
-
-	typedef random_access_iterator_tag iterator_category;
+	typedef random_access_iterator_tag category;
 	typedef T type;
 
+	using iterator<T>::operator*;
+	using iterator<T>::operator=;
+	using input_iterator<T>::operator->;
+	using input_iterator<T>::operator*;
 protected:
-
+	using bidirectional_iterator<T>::_pointer;
 private:
-
 public:
+	random_access_iterator() = default;
+	random_access_iterator(T* pointer) : iterator<T>(pointer) {}
 	random_access_iterator(const random_access_iterator&) = default;
 	random_access_iterator(random_access_iterator&&) = default;
 	~random_access_iterator() = default;
 
-	constexpr friend bool operator<(const random_access_iterator& lhs, const random_access_iterator& rhs) { return (lhs._ptr - rhs._ptr) < 0; }
+	constexpr friend bool operator!=(const random_access_iterator& lhs, const random_access_iterator& rhs) { return !(lhs == rhs); }
+	
+	constexpr friend bool operator==(const random_access_iterator& lhs, const random_access_iterator& rhs) { return lhs._pointer == rhs._pointer; }
 
-	constexpr friend bool operator>(const random_access_iterator& lhs, const random_access_iterator& rhs) { return (lhs._ptr - rhs._ptr) > 0; }
+	constexpr random_access_iterator& operator++() { ++_pointer; return *this; }
+
+	constexpr random_access_iterator operator++(int) { auto save = *this; _pointer++; return save; }
+
+	constexpr random_access_iterator& operator--() { --_pointer; return *this; }
+
+	constexpr random_access_iterator& operator--(int) { auto save = *this; _pointer--; return save; }
+
+	constexpr friend bool operator<(const random_access_iterator& lhs, const random_access_iterator& rhs) { return (lhs._pointer - rhs._pointer) < 0; }
+
+	constexpr friend bool operator>(const random_access_iterator& lhs, const random_access_iterator& rhs) { return (lhs._pointer - rhs._pointer) > 0; }
 
 	constexpr friend bool operator<=(const random_access_iterator& lhs, const random_access_iterator& rhs) { return !(lhs > rhs); }
 
 	constexpr friend bool operator>=(const random_access_iterator& lhs, const random_access_iterator& rhs) { return !(lhs < rhs); }
 
 
-	constexpr random_access_iterator& operator+=(size_type n) { _ptr += n; return *this; }
+	constexpr random_access_iterator& operator+=(size_type n) { this->_pointer += n; return *this; }
 
-	constexpr random_access_iterator& operator-=(size_type n) { _ptr -= n; return *this; }
+	constexpr random_access_iterator& operator-=(size_type n) { this->_pointer -= n; return *this; }
 
 
-	constexpr friend random_access_iterator& operator+(const random_access_iterator& lhs, size_type rhs) { self_type res = lhs; res._ptr += rhs; return res; }
+	constexpr friend random_access_iterator operator+(const random_access_iterator& lhs, size_type rhs) { auto res = lhs; res._pointer += rhs; return res; }
 
-	constexpr friend random_access_iterator& operator+(size_type lhs, const random_access_iterator& rhs) { return rhs + lhs; }
+	constexpr friend random_access_iterator operator+(size_type lhs, const random_access_iterator& rhs) { return rhs + lhs; }
 
-	constexpr friend random_access_iterator& operator-(const random_access_iterator& lhs, size_type rhs) { self_type res = lhs; res._ptr -= rhs; return res; }
+	constexpr friend random_access_iterator operator-(const random_access_iterator& lhs, size_type rhs) { auto res = lhs; res._pointer -= rhs; return res; }
 
-	constexpr friend typename difference_type operator-(const random_access_iterator& lhs, const random_access_iterator& rhs) { return lhs._ptr - rhs._ptr; }
+	constexpr friend difference_type operator-(const random_access_iterator& lhs, const random_access_iterator& rhs) { return lhs._pointer - rhs._pointer; }
 
-	constexpr type& operator[](size_type index) const { return _ptr[index]; }
+	constexpr T& operator[](size_type index) const { return this->_pointer[index]; }
+protected:
+private:
 };
+
+template <typename Iterator>
+struct reverse_iterator {
+
+};
+
+template <typename Iterator>
+reverse_iterator<Iterator> make_reversed_iterator();
 
 }

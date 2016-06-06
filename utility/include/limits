@@ -1,6 +1,6 @@
 #pragma once
 
-#include "type_traits"
+#include "maths"
 
 namespace jang {
 
@@ -23,19 +23,9 @@ public:
 	~numeric_limits() = default;
 
 
-	static constexpr const T (min)() noexcept { 
-		if (is_unsigned<T>::value) {
-			return T(0);
-		}
-		return -((max)() + 1);
-	}
+	constexpr static const T min() noexcept { return minimum<T>(); }
 
-	static constexpr const T (max)() noexcept {
-		if (is_unsigned<T>::value) {
-			return T(-1);
-		}
-		return typename	make_unsigned<T>::type(-1) / 2;
-	}
+	constexpr static const T max() noexcept { return maximum<T>(); }
 
 protected:
 

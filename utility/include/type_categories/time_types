@@ -1,0 +1,89 @@
+#pragma once
+
+namespace jang {
+
+constexpr long double operator"" _second_type(long double value)  { return value; }
+
+constexpr long double operator"" _deci_second_type(long double value) { return operator"" _second_type(value) / 10; }
+constexpr long double operator"" _centi_second_type(long double value) { return operator"" _deci_second_type(value) / 10; }
+constexpr long double operator"" _milli_second_type(long double value) { return operator"" _centi_second_type(value) / 10; }
+constexpr long double operator"" _micro_second_type(long double value) { return operator"" _milli_second_type(value) / 10; }
+constexpr long double operator"" _nano_second_type(long double value) { return operator"" _micro_second_type(value) / 10; }
+constexpr long double operator"" _pico_second_type(long double value) { return operator"" _nano_second_type(value) / 10; }
+constexpr long double operator"" _femto_second_type(long double value) { return operator"" _pico_second_type(value) / 10; }
+constexpr long double operator"" _atto_second_type(long double value) { return operator"" _femto_second_type(value) / 10; }
+constexpr long double operator"" _zepto_second_type(long double value) { return operator"" _atto_second_type(value) / 10; }
+constexpr long double operator"" _yocto_second_type(long double value) { return operator"" _zepto_second_type(value) / 10; }
+
+constexpr long double operator"" _deka_second_type(long double value) { return operator"" _second_type(value) * 10; }
+constexpr long double operator"" _hecto_second_type(long double value) { return operator"" _deka_second_type(value) * 10; }
+constexpr long double operator"" _kilo_second_type(long double value) { return operator"" _hecto_second_type(value) * 10; }
+constexpr long double operator"" _mega_second_type(long double value) { return operator"" _kilo_second_type(value) * 10; }
+constexpr long double operator"" _giga_second_type(long double value) { return operator"" _mega_second_type(value) * 10; }
+constexpr long double operator"" _tera_second_type(long double value) { return operator"" _giga_second_type(value) * 10; }
+constexpr long double operator"" _peta_second_type(long double value) { return operator"" _tera_second_type(value) * 10; }
+constexpr long double operator"" _exa_second_type(long double value) { return operator"" _peta_second_type(value) * 10; }
+constexpr long double operator"" _zetta_second_type(long double value) { return operator"" _exa_second_type(value) * 10; }
+constexpr long double operator"" _yotta_second_type(long double value) { return operator"" _zetta_second_type(value) * 10; }
+
+constexpr long double operator"" _second_type(unsigned long long int value)  { return value; }
+
+constexpr long double operator"" _deci_second_type(unsigned long long int value) { return operator"" _second_type(value) / 10; }
+constexpr long double operator"" _centi_second_type(unsigned long long int value) { return operator"" _deci_second_type(value) / 10; }
+constexpr long double operator"" _milli_second_type(unsigned long long int value) { return operator"" _centi_second_type(value) / 10; }
+constexpr long double operator"" _micro_second_type(unsigned long long int value) { return operator"" _milli_second_type(value) / 10; }
+constexpr long double operator"" _nano_second_type(unsigned long long int value) { return operator"" _micro_second_type(value) / 10; }
+constexpr long double operator"" _pico_second_type(unsigned long long int value) { return operator"" _nano_second_type(value) / 10; }
+constexpr long double operator"" _femto_second_type(unsigned long long int value) { return operator"" _pico_second_type(value) / 10; }
+constexpr long double operator"" _atto_second_type(unsigned long long int value) { return operator"" _femto_second_type(value) / 10; }
+constexpr long double operator"" _zepto_second_type(unsigned long long int value) { return operator"" _atto_second_type(value) / 10; }
+constexpr long double operator"" _yocto_second_type(unsigned long long int value) { return operator"" _zepto_second_type(value) / 10; }
+
+constexpr long double operator"" _deka_second_type(unsigned long long int value) { return operator"" _second_type(value) * 10; }
+constexpr long double operator"" _hecto_second_type(unsigned long long int value) { return operator"" _deka_second_type(value) * 10; }
+constexpr long double operator"" _kilo_second_type(unsigned long long int value) { return operator"" _hecto_second_type(value) * 10; }
+constexpr long double operator"" _mega_second_type(unsigned long long int value) { return operator"" _kilo_second_type(value) * 10; }
+constexpr long double operator"" _giga_second_type(unsigned long long int value) { return operator"" _mega_second_type(value) * 10; }
+constexpr long double operator"" _tera_second_type(unsigned long long int value) { return operator"" _giga_second_type(value) * 10; }
+constexpr long double operator"" _peta_second_type(unsigned long long int value) { return operator"" _tera_second_type(value) * 10; }
+constexpr long double operator"" _exa_second_type(unsigned long long int value) { return operator"" _peta_second_type(value) * 10; }
+constexpr long double operator"" _zetta_second_type(unsigned long long int value) { return operator"" _exa_second_type(value) * 10; }
+constexpr long double operator"" _yotta_second_type(unsigned long long int value) { return operator"" _zetta_second_type(value) * 10; }
+
+enum class day_type : char {
+	monday,
+	tuesday,
+	wednesday,
+	thursday,
+	friday,
+	saturday,
+	sunday
+};
+
+constexpr long double seconds_to_minutes(long double seconds) { return seconds / 60; }
+constexpr long double minutes_to_hours(long double minutes) { return minutes / 60; }
+constexpr long double hours_to_days(long double hours) { return hours / 24; }
+constexpr long double days_to_weeks(long double days) { return days / 7; }
+constexpr long double weeks_to_months(long double weeks) { return weeks / 4; }
+constexpr long double months_to_years(long double months) { return months / 12; } 
+
+constexpr long double minutes_to_seconds(long double minutes) { return minutes * 60; }
+constexpr long double hours_to_minutes(long double hours) { return hours * 60; }
+constexpr long double days_to_hours(long double days) { return days * 24; }
+constexpr long double weeks_to_days(long double weeks) { return weeks * 7; }
+constexpr long double months_to_weeks(long double months) { return months * 4; }
+constexpr long double years_to_months(long double years) { return years * 12; } 
+
+constexpr long double seconds_to_hours(long double seconds) { return minutes_to_hours(seconds_to_minutes(seconds)); }
+constexpr long double seconds_to_days(long double seconds) { return hours_to_days(seconds_to_hours(seconds)); }
+constexpr long double seconds_to_weeks(long double seconds) { return days_to_weeks(seconds_to_days(seconds)); }
+constexpr long double seconds_to_months(long double seconds) { return weeks_to_months(seconds_to_weeks(seconds)); }
+constexpr long double seconds_to_years(long double seconds) { return months_to_years(seconds_to_months(seconds)); }
+
+constexpr long double hours_to_seconds(long double hours) { return minutes_to_seconds(hours_to_minutes(hours)); }
+constexpr long double days_to_seconds(long double days) { return hours_to_seconds(days_to_hours(days)); }
+constexpr long double weeks_to_seconds(long double weeks) { return days_to_seconds(weeks_to_days(weeks)); }
+constexpr long double months_to_seconds(long double months) { return weeks_to_seconds(months_to_weeks(months)); }
+constexpr long double years_to_seconds(long double years) { return months_to_seconds(years_to_months(years)); }
+
+}

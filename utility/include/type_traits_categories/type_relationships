@@ -1,0 +1,100 @@
+#pragma once
+
+#include "composite_type_categories"
+#include "type_properties"
+#include "../utilities/declval"
+
+namespace jang {
+	
+template <typename T, typename U>
+struct is_same : public false_type {};
+
+template <typename T>
+struct is_same<T, T> : public true_type {};
+
+template <typename T, typename U>
+constexpr bool is_same_value = is_same<T,U>::value;
+
+template <typename T, typename... U>
+struct is_any_same : public false_type {};
+
+template <typename T, typename U>
+struct is_any_same<T, U> : public is_same<T, U> {};
+
+template <typename T, typename U, typename... V>
+struct is_any_same<T, U, V...> : public bool_constant<is_same_value<T, U> || is_any_same<T, V...>::value> {};
+
+template <typename T, typename... U>
+constexpr bool is_any_same_value = is_any_same<T, U...>::value;
+
+template <typename Base, typename Derived>
+struct is_base_of : public bool_constant<__is_base_of(Base, Derived)> {};
+
+template <typename Base, typename Derived>
+constexpr bool is_base_of_value = is_base_of<Base, Derived>::value;
+
+template <typename From, typename To>
+struct is_convertible : public bool_constant<__is_convertible_to(From, To) && !is_abstract_value<To>> {};
+
+template <typename From, typename To>
+constexpr bool is_convertible_value = is_convertible<From, To>::value;
+
+template <typename T>
+struct is_concurrent_object : public is_base_of<concurrency_object_type, T> {};
+
+template <typename T>
+constexpr bool is_concurrent_object_value = is_concurrent_object<T>::value;
+
+template <typename T>
+struct is_mutex : public is_base_of<mutex_object_type, T> {};
+
+template <typename T>
+constexpr bool is_mutex_value = is_mutex<T>::value;
+
+template <typename T>
+struct is_semaphore : public is_base_of<semaphore_object_type, T> {};
+
+template <typename T>
+constexpr bool is_semaphore_value = is_semaphore<T>::value;
+
+template <typename T>
+struct is_conditional_variable : public is_base_of<conditional_variable_object_type, T> {};
+
+template <typename T>
+constexpr bool is_conditional_variable_value = is_conditional_variable<T>::value;
+
+template <size_type N>
+struct is_binary_power { enum { value = N & !(N & (N - 1)) }; };
+
+template <size_type N>
+constexpr bool is_binary_power_value = is_binary_power<N>::value;
+
+template <typename T>
+struct is_literal_operator_type : public bool_constant<is_any_same_value<T, const char*, unsigned long long int, long double, char, wide_char_type, char_16_type,char_32_type, const wide_char_type*, const char_16_type*, const char_32_type*, size_type>> {};
+
+template <typename T>
+constexpr bool is_literal_operator_type_value = is_literal_operator_type<T>::value;
+
+namespace implementation {
+
+template <typename T>
+struct has_result_type {
+private:
+    template <typename U> 
+    static auto result(...) -> decltype(false_type());
+    template <typename U> 
+    static auto result(typename U::result_type*) -> decltype(true_type());
+public:
+	typedef decltype(result<T>(static_cast<T*>(nullptr))) type;
+    static const bool value = is_same_value<type, true_type>;
+};
+
+}
+
+template <typename T>
+struct has_result_type : public implementation::has_result_type<T> {};
+
+template <typename T>
+constexpr bool has_result_type_value = has_result_type<T>::value;
+
+}

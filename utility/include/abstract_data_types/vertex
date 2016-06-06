@@ -1,0 +1,25 @@
+#pragma once
+
+namespace jang {
+	
+template <typename T>
+class vertex {
+//member variables
+public:
+	typedef T type;
+protected:
+private:
+//member methods
+public:
+	vertex() = default;
+	vertex(const vertex&) = default;
+	vertex(vertex&&) = default;
+	~vertex() = default;
+
+	vertex& operator=(const vertex&) = default;
+	vertex& operator=(vertex&&) = default;
+protected:
+private:
+};
+
+}

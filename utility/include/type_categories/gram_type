@@ -1,0 +1,53 @@
+#pragma once
+
+namespace jang {	
+	
+constexpr long double operator"" _gram_type(long double value)  { return value; }
+
+constexpr long double operator"" _deci_gram_type(long double value) { return operator"" _gram_type(value) / 10; }
+constexpr long double operator"" _centi_gram_type(long double value) { return operator"" _deci_gram_type(value) / 10; }
+constexpr long double operator"" _milli_gram_type(long double value) { return operator"" _centi_gram_type(value) / 10; }
+constexpr long double operator"" _micro_gram_type(long double value) { return operator"" _milli_gram_type(value) / 10; }
+constexpr long double operator"" _nano_gram_type(long double value) { return operator"" _micro_gram_type(value) / 10; }
+constexpr long double operator"" _pico_gram_type(long double value) { return operator"" _nano_gram_type(value) / 10; }
+constexpr long double operator"" _femto_gram_type(long double value) { return operator"" _pico_gram_type(value) / 10; }
+constexpr long double operator"" _atto_gram_type(long double value) { return operator"" _femto_gram_type(value) / 10; }
+constexpr long double operator"" _zepto_gram_type(long double value) { return operator"" _atto_gram_type(value) / 10; }
+constexpr long double operator"" _yocto_gram_type(long double value) { return operator"" _zepto_gram_type(value) / 10; }
+
+constexpr long double operator"" _deka_gram_type(long double value) { return operator"" _gram_type(value) * 10; }
+constexpr long double operator"" _hecto_gram_type(long double value) { return operator"" _deka_gram_type(value) * 10; }
+constexpr long double operator"" _kilo_gram_type(long double value) { return operator"" _hecto_gram_type(value) * 10; }
+constexpr long double operator"" _mega_gram_type(long double value) { return operator"" _kilo_gram_type(value) * 10; }
+constexpr long double operator"" _giga_gram_type(long double value) { return operator"" _mega_gram_type(value) * 10; }
+constexpr long double operator"" _tera_gram_type(long double value) { return operator"" _giga_gram_type(value) * 10; }
+constexpr long double operator"" _peta_gram_type(long double value) { return operator"" _tera_gram_type(value) * 10; }
+constexpr long double operator"" _exa_gram_type(long double value) { return operator"" _peta_gram_type(value) * 10; }
+constexpr long double operator"" _zetta_gram_type(long double value) { return operator"" _exa_gram_type(value) * 10; }
+constexpr long double operator"" _yotta_gram_type(long double value) { return operator"" _zetta_gram_type(value) * 10; }
+
+constexpr long double operator"" _gram_type(unsigned long long int value)  { return value; }
+
+constexpr long double operator"" _deci_gram_type(unsigned long long int value) { return operator"" _gram_type(value) / 10; }
+constexpr long double operator"" _centi_gram_type(unsigned long long int value) { return operator"" _deci_gram_type(value) / 10; }
+constexpr long double operator"" _milli_gram_type(unsigned long long int value) { return operator"" _centi_gram_type(value) / 10; }
+constexpr long double operator"" _micro_gram_type(unsigned long long int value) { return operator"" _milli_gram_type(value) / 10; }
+constexpr long double operator"" _nano_gram_type(unsigned long long int value) { return operator"" _micro_gram_type(value) / 10; }
+constexpr long double operator"" _pico_gram_type(unsigned long long int value) { return operator"" _nano_gram_type(value) / 10; }
+constexpr long double operator"" _femto_gram_type(unsigned long long int value) { return operator"" _pico_gram_type(value) / 10; }
+constexpr long double operator"" _atto_gram_type(unsigned long long int value) { return operator"" _femto_gram_type(value) / 10; }
+constexpr long double operator"" _zepto_gram_type(unsigned long long int value) { return operator"" _atto_gram_type(value) / 10; }
+constexpr long double operator"" _yocto_gram_type(unsigned long long int value) { return operator"" _zepto_gram_type(value) / 10; }
+
+constexpr long double operator"" _deka_gram_type(unsigned long long int value) { return operator"" _gram_type(value) * 10; }
+constexpr long double operator"" _hecto_gram_type(unsigned long long int value) { return operator"" _deka_gram_type(value) * 10; }
+constexpr long double operator"" _kilo_gram_type(unsigned long long int value) { return operator"" _hecto_gram_type(value) * 10; }
+constexpr long double operator"" _mega_gram_type(unsigned long long int value) { return operator"" _kilo_gram_type(value) * 10; }
+constexpr long double operator"" _giga_gram_type(unsigned long long int value) { return operator"" _mega_gram_type(value) * 10; }
+constexpr long double operator"" _tera_gram_type(unsigned long long int value) { return operator"" _giga_gram_type(value) * 10; }
+constexpr long double operator"" _peta_gram_type(unsigned long long int value) { return operator"" _tera_gram_type(value) * 10; }
+constexpr long double operator"" _exa_gram_type(unsigned long long int value) { return operator"" _peta_gram_type(value) * 10; }
+constexpr long double operator"" _zetta_gram_type(unsigned long long int value) { return operator"" _exa_gram_type(value) * 10; }
+constexpr long double operator"" _yotta_gram_type(unsigned long long int value) { return operator"" _zetta_gram_type(value) * 10; }
+
+}

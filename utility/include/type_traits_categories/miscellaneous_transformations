@@ -1,0 +1,69 @@
+#pragma once
+
+#include "../algorithm"
+#include "pointers"
+#include "arrays"
+#include "../types"
+#include "../utilities/declval"
+
+namespace jang {
+	
+template <size_type Len, size_type Align>
+struct aligned_storage { typedef struct { alignas(Align) unsigned char data[Len]; } type; };
+
+template <typename T, typename... Rest>
+struct max_sizeof { enum { value = maximum(sizeof(T), max_sizeof<Rest...>::value) }; };
+
+template <size_type Len, typename... Types>
+struct aligned_union {
+	static constexpr size_type alignment_value = maximum({ alignof(Types)... });
+	static constexpr size_type length = Len;
+	struct type { alignas(alignment_value) char _s[maximum<size_type>(length, static_cast<size_type>(max_sizeof<Types...>::value))]; };
+};
+
+template <bool B, typename T, typename U>
+struct conditional { typedef T type; };
+
+template <typename T, typename U>
+struct conditional<false, T, U> { typedef U type; };
+
+template <bool B, typename T, typename U>
+using conditional_type = typename conditional<B, T, U>::type;
+
+template <typename T>
+struct decay {
+private:
+	typedef remove_reference_type<T> U;
+public:
+	typedef conditional_type<is_array_value<U>, add_pointer_type<remove_extent_type<U>>, conditional_type<is_function_value<U>, add_pointer_type<U>, remove_const_volatile_type<U>>> type;
+};
+
+template <typename T>
+using decay_type = typename decay<T>::type;
+
+template <bool B, typename T = void>
+struct enable_if {};
+
+template <typename T>
+struct enable_if<true, T> { typedef T type; };
+
+template <bool B, typename T = void>
+using enable_if_type = typename enable_if<B, T>::type;
+
+template <typename... T>
+struct common_type;
+
+template <typename T>
+struct common_type<T> { typedef decay_type<T> type; };
+
+template <typename T, typename U>
+struct common_type<T, U> { typedef decay_type<decltype(true ? declval<T>() : declval<U>())> type; };
+
+template <typename T, typename U, typename... V>
+struct common_type<T, U, V...> { typedef typename common_type<typename common_type<T, U>::type, V...>::type type; };
+
+template <typename... T>
+using common_type_type = typename common_type<T...>::type;
+
+}
+

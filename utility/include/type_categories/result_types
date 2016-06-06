@@ -1,0 +1,127 @@
+#pragma once
+
+#include "function_types"
+#include "fundamental_constant_types"
+#include "../type_traits_categories/type_relationships"
+
+namespace jang {
+
+namespace implementation {
+	
+template <typename T>
+struct derives_from_unary_function {
+private:
+    static auto result(...) -> decltype(false_type()) { return false_type(); }
+    template <typename Result, typename Arg>
+    static auto result(const volatile unary_function_type<Result, Arg>*) -> decltype(true_type()) { return true_type(); }
+public:
+    typedef decltype(result(static_cast<T*>(nullptr))) type;
+    static const bool value = is_same_value<type, true_type>;
+};
+
+template <typename T>
+struct derives_from_binary_function {
+private:
+    static auto result(...) -> decltype(false_type()) { return false_type(); }
+    template <typename Result, typename Arg0, typename Arg1>
+    static auto result(const volatile binary_function_type<Result, Arg0, Arg1>*) -> decltype(true_type()) { return true_type(); }
+public:
+    typedef decltype(result(static_cast<T*>(nullptr))) type;
+    static const bool value = is_same_value<type, true_type>;
+};
+
+template <typename T, bool = derives_from_unary_function<T>::value>
+struct maybe_derive_from_unary_function : public derives_from_unary_function<T>::type {};
+
+template <typename T>
+struct maybe_derive_from_unary_function<T, false> {};
+
+template <typename T, bool = derives_from_binary_function<T>::value>
+struct maybe_derive_from_binary_function : public derives_from_binary_function<T>::type {};
+
+template <typename T>
+struct maybe_derive_from_binary_function<T, false> {};
+
+template <typename T, bool = has_result_type<T>::value>
+struct weak_result_type : public maybe_derive_from_unary_function<T>, public maybe_derive_from_binary_function<T> { typedef typename T::result_type result_type; };
+
+template <typename T>
+struct weak_result_type<T, false> : public maybe_derive_from_unary_function<T>, public maybe_derive_from_binary_function<T> {};
+
+}
+
+template <typename T>
+struct weak_result_type : public implementation::weak_result_type<T> {};
+
+template <typename Result>
+struct weak_result_type<Result()> { typedef Result result_type; };
+
+template <typename Result>
+struct weak_result_type<Result(&)()> { typedef Result result_type; };
+
+template <typename Result>
+struct weak_result_type<Result(*)()> { typedef Result result_type; };
+
+template <typename Result, typename Arg>
+struct weak_result_type<Result(Arg)> : public unary_function_type<Result, Arg> {};
+
+template <typename Result, typename Arg>
+struct weak_result_type<Result(&)(Arg)> : public unary_function_type<Result, Arg> {};
+
+template <typename Result, typename Arg>
+struct weak_result_type<Result(*)(Arg)> : public unary_function_type<Result, Arg> {};
+
+template <typename Result, typename Class> struct weak_result_type<Result(Class::*)()> : public unary_function_type<Class*, Result> {};
+
+template <typename Result, typename Class>
+struct weak_result_type<Result(Class::*)() const> : public unary_function_type<const Class*, Result> {};
+
+template <typename Result, typename Class>
+struct weak_result_type<Result(Class::*)() volatile> : public unary_function_type<volatile Class*, Result> {};
+
+template <typename Result, typename Class>
+struct weak_result_type<Result(Class::*)() const volatile> : public unary_function_type<const volatile Class*, Result> {};
+
+template <typename Result, typename Arg0, typename Arg1>
+struct weak_result_type<Result(Arg0, Arg1)> : public binary_function_type<Result, Arg0, Arg1> {};
+
+template <typename Result, typename Arg0, typename Arg1>
+struct weak_result_type<Result(*)(Arg0, Arg1)>  : public binary_function_type<Result, Arg0, Arg1> {};
+
+template <typename Result, typename Arg0, typename Arg1>
+struct weak_result_type<Result(&)(Arg0, Arg1)> : public binary_function_type<Result, Arg0, Arg1> {};
+
+template <typename Result, typename Class, typename Arg0>
+struct weak_result_type<Result (Class::*)(Arg0)> : public binary_function_type<Class*, Arg0, Result> {};
+
+template <typename Result, typename Class, typename Arg0>
+struct weak_result_type<Result(Class::*)(Arg0) const> : public binary_function_type<const Class*, Arg0, Result> {};
+
+template <typename Result, typename Class, typename Arg0>
+struct weak_result_type<Result(Class::*)(Arg0) volatile> : public binary_function_type<volatile Class*, Arg0, Result> {};
+
+template <typename Result, typename Class, typename Arg0>
+struct weak_result_type<Result(Class::*)(Arg0) const volatile> : public binary_function_type<const volatile Class*, Arg0, Result> {};
+
+template <typename Result, typename Arg0, typename Arg1, typename Arg2, typename... Args>
+struct weak_result_type<Result(Arg0, Arg1, Arg2, Args...)> { typedef Result result_type; };
+
+template <typename Result, typename Arg0, typename Arg1, typename Arg2, typename... Args>
+struct weak_result_type<Result(&)(Arg0, Arg1, Arg2, Args...)> { typedef Result result_type; };
+
+template <typename Result, typename Arg0, typename Arg1, typename Arg2, typename... Args>
+struct weak_result_type<Result(*)(Arg0, Arg1, Arg2, Args...)> { typedef Result result_type; };
+
+template <typename Result, typename Class, typename Arg0, typename Arg1, typename... Arg2>
+struct weak_result_type<Result(Class::*)(Arg0, Arg1, Arg2...)> { typedef Result result_type; };
+
+template <typename Result, typename Class, typename Arg0, typename Arg1, typename... Arg2>
+struct weak_result_type<Result(Class::*)(Arg0, Arg1, Arg2...) const> { typedef Result result_type; };
+
+template <typename Result, typename Class, typename Arg0, typename Arg1, typename... Arg2>
+struct weak_result_type<Result(Class::*)(Arg0, Arg1, Arg2...) volatile> { typedef Result result_type; };
+
+template <typename Result, typename Class, typename Arg0, typename Arg1, typename... Arg2>
+struct weak_result_type<Result(Class::*)(Arg0, Arg1, Arg2...) const volatile> { typedef Result result_type; };
+	
+}

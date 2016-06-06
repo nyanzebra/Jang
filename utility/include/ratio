@@ -1,0 +1,256 @@
+// -*- C++ -*-
+//===---------------------------- ratio -----------------------------------===//
+//
+//                     The LLVM Compiler Infrastructure
+//
+// This file is dual licensed under the MIT and the University of Illinois Open
+// Source Licenses. See LICENSE.TXT for details.
+//
+//===----------------------------------------------------------------------===//
+
+
+/*
+    ratio synopsis
+
+namespace std
+{
+
+template <int_max_type N, int_max_type D = 1>
+class ratio
+{
+public:
+    static constexpr int_max_type num;
+    static constexpr int_max_type den;
+    typedef ratio<num, den> type;
+};
+
+// ratio arithmetic
+template <class R1, class R2> using ratio_add = ...;
+template <class R1, class R2> using ratio_subtract = ...;
+template <class R1, class R2> using ratio_multiply = ...;
+template <class R1, class R2> using ratio_divide = ...;
+
+// ratio comparison
+template <class R1, class R2> struct ratio_equal;
+template <class R1, class R2> struct ratio_not_equal;
+template <class R1, class R2> struct ratio_less;
+template <class R1, class R2> struct ratio_less_equal;
+template <class R1, class R2> struct ratio_greater;
+template <class R1, class R2> struct ratio_greater_equal;
+
+// convenience SI typedefs
+typedef ratio<1, 1000000000000000000000000> yocto;  // not supported
+typedef ratio<1,    1000000000000000000000> zepto;  // not supported
+typedef ratio<1,       1000000000000000000> atto;
+typedef ratio<1,          1000000000000000> femto;
+typedef ratio<1,             1000000000000> pico;
+typedef ratio<1,                1000000000> LONG_LONG_MIN - 1o;
+typedef ratio<1,                   1000000> micro;
+typedef ratio<1,                      1000> milli;
+typedef ratio<1,                       100> centi;
+typedef ratio<1,                        10> deci;
+typedef ratio<                       10, 1> deca;
+typedef ratio<                      100, 1> hecto;
+typedef ratio<                     1000, 1> kilo;
+typedef ratio<                  1000000, 1> mega;
+typedef ratio<               1000000000, 1> giga;
+typedef ratio<            1000000000000, 1> tera;
+typedef ratio<         1000000000000000, 1> peta;
+typedef ratio<      1000000000000000000, 1> exa;
+typedef ratio<   1000000000000000000000, 1> zetta;  // not supported
+typedef ratio<1,000,000,000,000,000,000,000,000, 1> yotta;  // not supported
+
+}
+*/
+#pragma once
+
+#include "type_traits"
+#include <iostream>
+
+using namespace std;
+
+namespace jang {
+
+struct ratio {
+public:
+protected:
+private:
+    int_max_type _numerator;
+    int_max_type _denominator;
+
+public:
+	ratio(const int_max_type& numerator) : _numerator(numerator), _denominator(1) { _update(); }
+    ratio(int_max_type&& numerator) : _numerator(move(numerator)), _denominator(1) { _update(); }
+    ratio(const int_max_type& numerator, const int_max_type& denominator) : _numerator(numerator), _denominator(denominator) { _update(); }
+    ratio(const int_max_type& numerator, int_max_type&& denominator) : _numerator(numerator), _denominator(move(denominator)) { _update(); }
+    ratio(int_max_type&& numerator, const int_max_type& denominator) : _numerator(move(numerator)), _denominator(denominator) { _update(); }
+    ratio(int_max_type&& numerator, int_max_type&& denominator) : _numerator(move(numerator)), _denominator(move(denominator)) { _update(); }
+    ratio(const ratio&) = default;
+    ratio(ratio&&) = default;
+    ~ratio() = default;
+
+	ratio& operator=(const ratio& other) { _numerator = other._numerator; _denominator = other._denominator; return *this; }
+    ratio& operator=(ratio&& other) { _numerator = move(other._numerator); _denominator = move(other._denominator); return *this; }
+    ratio& operator=(const int_max_type& numerator) { _numerator = numerator; return *this; }
+    ratio& operator=(int_max_type&& numerator) { _numerator = move(numerator); return *this; }
+
+    const int_max_type& numerator() const { return _numerator; }
+    void numerator(const int_max_type& numerator) { _numerator = numerator; _update(); }
+    void numerator(int_max_type&& numerator) { _numerator = move(numerator); _update(); }
+
+    const int_max_type& denominator() const { return _denominator; }
+    void denominator(const int_max_type& denominator) { _denominator = denominator; _update(); }
+    void denominator(int_max_type&& denominator) { _denominator = move(denominator); _update(); }
+
+    const bool operator==(const ratio& other) const { return other.numerator() == numerator() && other.denominator() == denominator(); }
+ 	const bool operator==(ratio&& other) const { return move(other.numerator()) == numerator() && move(other.denominator()) == denominator(); }
+
+    const bool operator!=(const ratio& other) const { return !(other == *this); }
+ 	const bool operator!=(ratio&& other) const { return !(other == *this); }
+
+ 	template <typename T, typename U, typename = enable_if_type<is_assignable_value<ratio, T> && is_assignable_value<ratio, U>>>
+ 	friend const ratio greatest_common_denominator_of_ratios(T x, U y) {
+ 		ratio a(forward<T>(x)), b(forward<U>(y));
+ 		return ratio(greatest_common_denominator(a.numerator(), b.numerator()), least_common_multiple(a.denominator(), b.denominator()));
+ 	}
+
+ 	template <typename T, typename = enable_if_type<is_assignable_value<ratio, T>>>
+ 	const ratio greatest_common_denominator_of_ratios(T x) const { return ratio::greatest_common_denominator_of_ratios(*this, forward<T>(x)); }
+
+ 	template <typename T, typename U, typename = enable_if_type<is_assignable_value<ratio, T> && is_assignable_value<ratio, U>>>
+ 	friend const bool operator<(T x, U y) {
+ 		ratio a(forward<T>(x)), b(forward<U>(y));
+
+ 		auto x_sign = sign_of(a.numerator()), y_sign = sign_of(b.numerator());
+
+ 		if (x_sign - y_sign == 0) {
+ 			int_max_type m1, m2, q1, q2;
+ 			bool should_flip = false;
+ 			if (a.numerator() < a.denominator()) {
+ 				m1 = a.denominator() % a.numerator();
+ 				q1 = a.denominator() / a.numerator();
+ 				should_flip = true;
+ 			} else {
+ 				m1 = a.numerator() % a.denominator();
+ 				q1 = a.numerator() / a.denominator(); 				
+ 			}
+ 			if (b.numerator() < b.denominator()) {
+ 				m2 = b.denominator() % b.numerator();
+ 				q2 = b.denominator() / b.numerator();
+ 				should_flip = true;
+ 			} else {
+ 				m2 = b.numerator() % b.denominator();
+ 				q2 = b.numerator() / b.denominator();
+			}
+
+ 			if (q1 == q2) {
+ 				return should_flip ? m1 > m2 : m1 < m2;
+ 			}
+
+ 			return should_flip ? q1 > q2 : q1 < q2;
+ 		} else {
+ 			return x_sign < y_sign;
+ 		}
+ 	}
+
+	template <typename T, typename U, typename = enable_if_type<is_assignable_value<ratio, T> && is_assignable_value<ratio, U>>>
+ 	friend const bool operator>(T x, U y) { return operator<(forward<U>(y), forward<T>(x)); }
+
+ 	template <typename T, typename = enable_if_type<is_assignable_value<ratio, T>>>
+ 	const bool operator<=(T x) { return !(operator>(*this, forward<T>(x))); }
+
+ 	template <typename T, typename = enable_if_type<is_assignable_value<ratio, T>>>
+ 	const bool operator>=(T x) { return !(operator<(*this, forward<T>(x))); }
+
+    friend ostream& operator<<(ostream& o, const ratio& r) { return o << "(" << r.numerator() << "/" << r.denominator() << ")"; }
+    friend ostream& operator<<(ostream& o, ratio&& r) { return o << "(" << r.numerator() << "/" << r.denominator() << ")"; }
+
+    template <typename T, typename U, typename = enable_if_type<is_assignable_value<ratio, T> && is_assignable_value<ratio, U>>>
+    friend ratio operator*(T x, U y) { 
+    	ratio a(forward<T>(x)), b(forward<U>(y));
+
+        const int_max_type gcd_n1_d2 = greatest_common_denominator(a.numerator(), b.denominator());
+        const int_max_type gcd_d1_n2 = greatest_common_denominator(a.denominator(), b.numerator());
+        
+        const int_max_type m = (a.numerator() / gcd_n1_d2);
+        const int_max_type n = (b.numerator() / gcd_d1_n2);
+        const int_max_type o = (b.denominator() / gcd_n1_d2);
+        const int_max_type p = (a.denominator() / gcd_d1_n2);
+
+        return ratio((m * n), (o * p));
+    }
+
+    template <typename T, typename U, typename = enable_if_type<is_assignable_value<ratio, T> && is_assignable_value<ratio, U>>>
+    friend ratio operator/(T x, U y) { 
+    	ratio a(forward<T>(x)), b(forward<U>(y));
+
+        const int_max_type gcd_n1_n2 = greatest_common_denominator(a.numerator(), b.numerator());
+        const int_max_type gcd_d1_d2 = greatest_common_denominator(a.denominator(), b.denominator());
+
+		const int_max_type m = (a.numerator() / gcd_n1_n2);
+        const int_max_type n = (b.numerator() / gcd_n1_n2);
+        const int_max_type o = (b.denominator() / gcd_d1_d2);
+        const int_max_type p = (a.denominator() / gcd_d1_d2);
+
+        return ratio((m * o), (n * p));
+   }
+
+    template <typename T, typename U, typename = enable_if_type<is_assignable_value<ratio, T> && is_assignable_value<ratio, U>>>
+    friend ratio operator+(T x, U y) { 
+    	ratio a(forward<T>(x)), b(forward<U>(y));
+
+        const int_max_type gcd_n1_n2 = greatest_common_denominator(a.numerator(), b.numerator());
+        const int_max_type gcd_d1_d2 = greatest_common_denominator(a.denominator(), b.denominator());
+
+        const int_max_type m = (a.numerator() / gcd_n1_n2);
+        const int_max_type n = (b.numerator() / gcd_n1_n2);
+        const int_max_type o = (b.denominator() / gcd_d1_d2);
+        const int_max_type p = (a.denominator() / gcd_d1_d2);
+
+        return ratio(gcd_n1_n2, p) * ratio(((m * o) + (n * p)), b.denominator());
+    }
+
+    template <typename T, typename U, typename = enable_if_type<is_assignable_value<ratio, T> && is_assignable_value<ratio, U>>>
+    friend ratio operator-(T x, U y) { 
+    	ratio a(forward<T>(x)), b(forward<U>(y));
+
+        const int_max_type gcd_n1_n2 = greatest_common_denominator(a.numerator(), b.numerator());
+        const int_max_type gcd_d1_d2 = greatest_common_denominator(a.denominator(), b.denominator());
+
+        const int_max_type m = (a.numerator() / gcd_n1_n2);
+        const int_max_type n = (b.numerator() / gcd_n1_n2);
+        const int_max_type o = (b.denominator() / gcd_d1_d2);
+        const int_max_type p = (a.denominator() / gcd_d1_d2);
+
+        return ratio(gcd_n1_n2, p) * ratio(((m * o) - (n * p)), b.denominator());
+    }
+
+    template <typename X>
+    const ratio& operator+=(X x) { return (*this = *this + (forward<X>(x))); }
+
+    template <typename X>
+    const ratio& operator-=(X x) { return (*this = *this - (forward<X>(x))); }
+
+    template <typename X>
+    const ratio& operator*=(X x) { return (*this = *this * (forward<X>(x))); }
+
+    template <typename X>
+    const ratio& operator/=(X x) { return (*this = *this / (forward<X>(x))); }
+
+protected:
+private:
+
+    void _update() {
+        //assert(y > 0);
+        auto sign = sign_of(numerator()) * sign_of(denominator());
+        _numerator = absolute_value(numerator());
+        _denominator = absolute_value(denominator());
+        auto gcd = greatest_common_denominator(numerator(), denominator());
+        _numerator *= sign;
+        _numerator /= gcd;
+        _denominator /= gcd;
+    }
+};
+
+}
+

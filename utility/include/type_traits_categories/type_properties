@@ -1,0 +1,102 @@
+#pragma once
+
+//#include "supported_operations"
+
+#include "../iterator"
+#include "../type_categories/fundamental_constant_types"
+#include "composite_type_categories"
+#include "../type_categories/concurrency_types"
+
+namespace jang {
+
+template <typename T>
+struct is_const : public false_type {};
+
+template <typename T>
+struct is_const<const T> : public true_type {};
+
+template <typename T>
+constexpr bool is_const_value = is_const<T>::value;
+
+template <typename T>
+struct is_volatile : public false_type {};
+
+template <typename T>
+struct is_volatile<volatile T> : public true_type {};
+
+template <typename T>
+constexpr bool is_volatile_value = is_volatile<T>::value;
+
+template <typename T>
+struct is_trivial :public  bool_constant<__is_trivial(T)> {};
+
+template <typename T>
+constexpr bool is_trivial_value = is_trivial<T>::value;
+
+template <typename T>
+struct is_trivially_copyable : public bool_constant<__is_trivially_copyable(T)> {};
+
+template <typename T>
+constexpr bool is_trivially_copyable_value = is_trivially_copyable<T>::value;
+
+template <typename T>
+struct is_standard_layout : public bool_constant<__is_standard_layout(T)> {};
+
+template <typename T>
+constexpr bool is_standard_layout_value = is_standard_layout<T>::value;
+
+template <typename T>
+struct is_pod : public bool_constant<__is_pod(T)> {};
+
+template <typename T>
+constexpr bool is_pod_value = is_pod<T>::value;
+
+template <typename T>
+struct is_literal_type : public bool_constant<__is_literal_type(T)> {};
+
+template <typename T>
+constexpr bool is_literal_type_value = is_literal_type<T>::value;
+
+template <typename T>
+struct is_empty : public bool_constant<__is_empty(T)> {};
+
+template <typename T>
+constexpr bool is_empty_value = is_empty<T>::value;
+
+template <typename T>
+struct is_polymorphic : public bool_constant<__is_polymorphic(T)> {};
+
+template <typename T>
+constexpr bool is_polymorphic_value = is_polymorphic<T>::value;
+
+template <typename T>
+struct is_final : public bool_constant<__is_final(T)> {};
+
+template <typename T>
+constexpr bool is_final_value = is_final<T>::value;
+
+template <typename T>
+struct is_abstract : public bool_constant<__is_abstract(T)> {};
+
+template <typename T>
+constexpr bool is_abstract_value = is_abstract<T>::value;
+
+template <typename T, bool = is_arithmetic<T>::value>
+struct is_signed : public bool_constant<(T(-1) < T(0)) > {};
+
+template <typename T>
+struct is_signed<T, false> : public false_type {};
+
+template <typename T>
+constexpr bool is_signed_value = is_signed<T>::value;
+
+template <typename T, bool = is_arithmetic<T>::value>
+struct is_unsigned : public bool_constant<(T(-1) > T(0))> {};
+
+template <typename T>
+struct is_unsigned<T, false> : public false_type {};
+
+template <typename T>
+constexpr bool is_unsigned_value = is_unsigned<T>::value;
+
+}

@@ -1,0 +1,200 @@
+#pragma once
+
+#include "composite_type_categories"
+
+namespace jang {
+
+namespace implementation {
+
+template <class MemberPointer, bool IsMemberFunctionPointer, bool IsMemberObjectPointer>
+struct member_pointer_traits {};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args...), true, false> {
+    typedef Class class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args..., ...), true, false> {
+    typedef Class class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args..., ...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args...) const, true, false> {
+    typedef Class const class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args..., ...) const, true, false> {
+    typedef Class const class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args..., ...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args...) volatile, true, false> {
+    typedef Class volatile class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args..., ...) volatile, true, false> {
+    typedef Class volatile class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args..., ...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args...) const volatile, true, false> {
+    typedef Class const volatile class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args..., ...) const volatile, true, false> {
+    typedef Class const volatile class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args..., ...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args...) &, true, false> {
+    typedef Class& class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args..., ...) &, true, false> {
+    typedef Class& class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args..., ...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args...) const&, true, false> {
+    typedef Class const& class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args..., ...) const&, true, false> {
+    typedef Class const& class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args..., ...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args...) volatile&, true, false> {
+    typedef Class volatile& class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args..., ...) volatile&, true, false> {
+    typedef Class volatile& class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args..., ...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args...) const volatile&, true, false> {
+    typedef Class const volatile& class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args..., ...) const volatile&, true, false> {
+    typedef Class const volatile& class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args..., ...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args...) &&, true, false> {
+    typedef Class&& class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args..., ...) &&, true, false> {
+    typedef Class&& class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args..., ...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args...) const&&, true, false> {
+    typedef Class const&& class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args..., ...) const&&, true, false> {
+    typedef Class const&& class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args..., ...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args...) volatile&&, true, false> {
+    typedef Class volatile&& class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args..., ...) volatile&&, true, false> {
+    typedef Class volatile&& class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args..., ...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args...) const volatile&&, true, false> {
+    typedef Class const volatile&& class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args...);
+};
+
+template <typename Result, typename Class, typename... Args>
+struct member_pointer_traits<Result(Class::*)(Args..., ...) const volatile&&, true, false> {
+    typedef Class const volatile&& class_type;
+    typedef Result return_type;
+    typedef Result (function_type)(Args..., ...);
+};
+
+template <typename Result, typename Class>
+struct member_pointer_traits<Result Class::*, false, true> {
+    typedef Class class_type;
+    typedef Result return_type;
+};
+
+}
+
+template <typename MemberPointer>
+struct member_pointer_traits : public implementation::member_pointer_traits<remove_const_volatile_type<MemberPointer>, is_member_function_pointer_value<MemberPointer>, is_member_object_pointer_value<MemberPointer>> {};
+
+template <typename MemberPointer>
+using member_pointer_traits_class_type = typename member_pointer_traits<MemberPointer>::class_type;
+
+template <typename MemberPointer>
+using member_pointer_traits_return_type = typename member_pointer_traits<MemberPointer>::return_type;
+
+template <typename MemberPointer>
+using member_pointer_traits_function_type = typename member_pointer_traits<MemberPointer>::function_type;
+
+}

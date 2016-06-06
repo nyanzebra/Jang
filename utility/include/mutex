@@ -1,0 +1,786 @@
+#pragma once
+
+#include "definitions"
+#include "system_error"
+#include "utility"
+
+namespace jang { 
+
+struct defer_lock_type {};
+struct try_to_lock_type {};
+struct adopt_lock_type {};
+
+constexpr defer_lock_type  defer_lock  = defer_lock_type();
+constexpr try_to_lock_type try_to_lock = try_to_lock_type();
+constexpr adopt_lock_type  adopt_lock  = adopt_lock_type();
+
+class dummy_mutex : public mutex_object_type {
+//member variables
+public:
+protected:
+private:
+//member methods
+public:
+	dummy_mutex() = default;
+	dummy_mutex(const dummy_mutex&) = delete;
+	dummy_mutex(dummy_mutex&&) = delete;
+	~dummy_mutex() = default;
+
+	dummy_mutex& operator=(const dummy_mutex&) = delete;
+	dummy_mutex& operator=(dummy_mutex&&) = default;
+
+	void lock() noexcept {}
+
+	void unlock() noexcept {}
+
+	bool try_lock() noexcept { return false; }
+
+	native_handle_type native_handle() { return nullptr; }
+
+protected:
+private:
+};
+
+class mutex : public mutex_object_type {
+public:
+protected:
+private:
+	pthread_mutex_t _handle;
+public:
+	constexpr mutex() noexcept : _handle(PTHREAD_MUTEX_INITIALIZER) {}
+	mutex(const mutex&) = delete;
+	mutex(mutex&&) = delete;
+	~mutex() = default;
+
+	mutex& operator=(const mutex&) = delete;
+	mutex& operator=(mutex&& other) { _handle = move(other._handle); return *this; }
+
+	void lock() { 
+		int error_code = pthread_mutex_lock(&_handle);
+		if (error_code) { 
+			throw system_error(error_code); 
+		}
+	}
+
+	void unlock() noexcept { pthread_mutex_unlock(&_handle); }
+
+	bool try_lock() noexcept { return pthread_mutex_trylock(&_handle); }
+
+	native_handle_type native_handle() { return &_handle; }
+
+protected:
+private:
+};
+
+template <class Mutex>
+class unique_lock {
+public:
+    typedef Mutex mutex_type;
+protected:
+private:
+    mutex_type* _mutex;
+    bool _does_own;
+public:
+    unique_lock() noexcept : _mutex(nullptr), _does_own(false) {}
+    explicit unique_lock(mutex_type& mutex) : _mutex(&mutex), _does_own(true) {_mutex->lock();}
+    unique_lock(mutex_type& mutex, defer_lock_type) noexcept : _mutex(&mutex), _does_own(false) {}
+    unique_lock(mutex_type& mutex, try_to_lock_type) : _mutex(&mutex), _does_own(mutex.try_lock()) {}
+    unique_lock(mutex_type& mutex, adopt_lock_type) : _mutex(&mutex), _does_own(true) {}
+    template <class Clock, class Duration>
+    unique_lock(mutex_type& mutex, const chrono::time_point<Clock, Duration>& time) : _mutex(&mutex), _does_own(mutex.try_lock_until(time)) {}
+    template <class Rep, class Period>
+    unique_lock(mutex_type& mutex, const chrono::duration<Rep, Period>& duration) : _mutex(&mutex), _does_own(mutex.try_lock_for(duration)) {}
+    unique_lock(const unique_lock&) = delete;
+    unique_lock(unique_lock&& lock) noexcept : _mutex(move(lock._mutex)), _does_own(move(lock._does_own)) { lock._mutex = nullptr; lock._does_own = false; }
+    ~unique_lock() { if (_does_own) _mutex->unlock(); }
+
+    unique_lock& operator=(const unique_lock&) = delete;
+    unique_lock& operator=(unique_lock&& lock) noexcept {
+    	if (_does_own) {
+    		_mutex->unlock();
+    	}
+    	_mutex = move(lock._mutex);
+    	_does_own = move(lock._does_own);
+    	lock._mutex = nullptr;
+    	lock._does_own = false;
+    	return *this;
+    }
+
+    void lock();
+    bool try_lock();
+
+    template <class _Rep, class _Period>
+        bool try_lock_for(const chrono::duration<_Rep, _Period>& __d);
+    template <class _Clock, class _Duration>
+        bool try_lock_until(const chrono::time_point<_Clock, _Duration>& __t);
+
+    void unlock();
+
+        void swap(unique_lock& __u) noexcept
+    {
+        swap(__m_, __u.__m_);
+        swap(__owns_, __u.__owns_);
+    }
+        mutex_type* release() noexcept
+    {
+        mutex_type* __m = __m_;
+        __m_ = nullptr;
+        __owns_ = false;
+        return __m;
+    }
+
+        bool owns_lock() const noexcept {return __owns_;}
+        _LIBCPP_EXPLICIT
+        operator bool () const noexcept {return __owns_;}
+        mutex_type* mutex() const noexcept {return __m_;}
+};
+
+template <class _Mutex>
+void
+unique_lock<_Mutex>::lock()
+{
+    if (__m_ == nullptr)
+        __throw_system_error(EPERM, "unique_lock::lock: references null mutex");
+    if (__owns_)
+        __throw_system_error(EDEADLK, "unique_lock::lock: already locked");
+    __m_->lock();
+    __owns_ = true;
+}
+
+template <class _Mutex>
+bool
+unique_lock<_Mutex>::try_lock()
+{
+    if (__m_ == nullptr)
+        __throw_system_error(EPERM, "unique_lock::try_lock: references null mutex");
+    if (__owns_)
+        __throw_system_error(EDEADLK, "unique_lock::try_lock: already locked");
+    __owns_ = __m_->try_lock();
+    return __owns_;
+}
+
+template <class _Mutex>
+template <class _Rep, class _Period>
+bool
+unique_lock<_Mutex>::try_lock_for(const chrono::duration<_Rep, _Period>& __d)
+{
+    if (__m_ == nullptr)
+        __throw_system_error(EPERM, "unique_lock::try_lock_for: references null mutex");
+    if (__owns_)
+        __throw_system_error(EDEADLK, "unique_lock::try_lock_for: already locked");
+    __owns_ = __m_->try_lock_for(__d);
+    return __owns_;
+}
+
+template <class _Mutex>
+template <class _Clock, class _Duration>
+bool
+unique_lock<_Mutex>::try_lock_until(const chrono::time_point<_Clock, _Duration>& __t)
+{
+    if (__m_ == nullptr)
+        __throw_system_error(EPERM, "unique_lock::try_lock_until: references null mutex");
+    if (__owns_)
+        __throw_system_error(EDEADLK, "unique_lock::try_lock_until: already locked");
+    __owns_ = __m_->try_lock_until(__t);
+    return __owns_;
+}
+
+template <class _Mutex>
+void
+unique_lock<_Mutex>::unlock()
+{
+    if (!__owns_)
+        __throw_system_error(EPERM, "unique_lock::unlock: not locked");
+    __m_->unlock();
+    __owns_ = false;
+}
+
+template <class _Mutex>
+inline void
+swap(unique_lock<_Mutex>& __x, unique_lock<_Mutex>& __y) noexcept
+    {__x.swap(__y);}
+
+//enum class cv_status
+_LIBCPP_DECLARE_STRONG_ENUM(cv_status)
+{
+    no_timeout,
+    timeout
+};
+_LIBCPP_DECLARE_STRONG_ENUM_EPILOG(cv_status)
+
+template <class _L0, class _L1, class _L2, class ..._L3>
+void
+__lock_first(int __i, _L0& __l0, _L1& __l1, _L2& __l2, _L3& ...__l3)
+{
+    while (true)
+    {
+        switch (__i)
+        {
+        case 0:
+            {
+                unique_lock<_L0> __u0(__l0);
+                __i = try_lock(__l1, __l2, __l3...);
+                if (__i == -1)
+                {
+                    __u0.release();
+                    return;
+                }
+            }
+            ++__i;
+            sched_yield();
+            break;
+        case 1:
+            {
+                unique_lock<_L1> __u1(__l1);
+                __i = try_lock(__l2, __l3..., __l0);
+                if (__i == -1)
+                {
+                    __u1.release();
+                    return;
+                }
+            }
+            if (__i == sizeof...(_L3) + 1)
+                __i = 0;
+            else
+                __i += 2;
+            sched_yield();
+            break;
+        default:
+            __lock_first(__i - 2, __l2, __l3..., __l0, __l1);
+            return;
+        }
+    }
+}
+
+template <class _L0, class _L1, class _L2, class ..._L3>
+inline void
+lock(_L0& __l0, _L1& __l1, _L2& __l2, _L3& ...__l3)
+{
+    __lock_first(0, __l0, __l1, __l2, __l3...);
+}
+
+template <typename... Mutexes>
+class lock_guard {
+public:
+protected:
+private:
+public:
+	explicit lock_guard(Mutexes&... mutexes) {}
+	lock_guard(Mutexes&... mutexes, adopt_lock_type adopt_lock)  {}
+	lock_guard(const lock_guard&) = delete;
+	lock_guard(lock_guard&&) = delete;
+	~lock_guard() {}
+
+	lock_guard& operator=(const lock_guard&) = delete;
+
+protected:
+private:
+};
+
+
+
+template <class _Mutex>
+class_ONLY lock_guard
+{
+public:
+    typedef _Mutex mutex_type;
+
+private:
+    mutex_type& __m_;
+public:
+
+        explicit lock_guard(mutex_type& __m)
+        : __m_(__m) {__m_.lock();}
+        lock_guard(mutex_type& __m, adopt_lock_t)
+        : __m_(__m) {}
+        ~lock_guard() {__m_.unlock();}
+
+private:
+    lock_guard(lock_guard const&);// = delete;
+    lock_guard& operator=(lock_guard const&);// = delete;
+};
+
+
+
+class condition_variable
+{
+    pthread_cond_t __cv_;
+public:
+    #ifndef _LIBCPP_HAS_NO_CONSTEXPR
+    constexpr condition_variable() : __cv_(PTHREAD_COND_INITIALIZER) {}
+#else
+    condition_variable() {__cv_ = (pthread_cond_t)PTHREAD_COND_INITIALIZER;}
+#endif
+    ~condition_variable();
+
+private:
+    condition_variable(const condition_variable&); // = delete;
+    condition_variable& operator=(const condition_variable&); // = delete;
+
+public:
+    void notify_one() noexcept;
+    void notify_all() noexcept;
+
+    void wait(unique_lock<mutex>& __lk) noexcept;
+    template <class _Predicate>
+        void wait(unique_lock<mutex>& __lk, _Predicate __pred);
+
+    template <class _Clock, class _Duration>
+        cv_status
+        wait_until(unique_lock<mutex>& __lk,
+                   const chrono::time_point<_Clock, _Duration>& __t);
+
+    template <class _Clock, class _Duration, class _Predicate>
+        bool
+        wait_until(unique_lock<mutex>& __lk,
+                   const chrono::time_point<_Clock, _Duration>& __t,
+                   _Predicate __pred);
+
+    template <class _Rep, class _Period>
+        cv_status
+        wait_for(unique_lock<mutex>& __lk,
+                 const chrono::duration<_Rep, _Period>& __d);
+
+    template <class _Rep, class _Period, class _Predicate>
+        bool
+        wait_for(unique_lock<mutex>& __lk,
+                 const chrono::duration<_Rep, _Period>& __d,
+                 _Predicate __pred);
+
+    typedef pthread_cond_t* native_handle_type;
+    native_handle_type native_handle() {return &__cv_;}
+
+private:
+    void __do_timed_wait(unique_lock<mutex>& __lk,
+       chrono::time_point<chrono::system_clock, chrono::nanoseconds>) noexcept;
+};
+#endif // !_LIBCPP_HAS_NO_THREADS
+
+template <class _To, class _Rep, class _Period>
+inline typename enable_if
+<
+    chrono::__is_duration<_To>::value,
+    _To
+>::type
+__ceil(chrono::duration<_Rep, _Period> __d)
+{
+    using namespace chrono;
+    _To __r = duration_cast<_To>(__d);
+    if (__r < __d)
+        ++__r;
+    return __r;
+}
+
+#ifndef _LIBCPP_HAS_NO_THREADS
+template <class _Predicate>
+void
+condition_variable::wait(unique_lock<mutex>& __lk, _Predicate __pred)
+{
+    while (!__pred())
+        wait(__lk);
+}
+
+template <class _Clock, class _Duration>
+cv_status
+condition_variable::wait_until(unique_lock<mutex>& __lk,
+                               const chrono::time_point<_Clock, _Duration>& __t)
+{
+    using namespace chrono;
+    wait_for(__lk, __t - _Clock::now());
+    return _Clock::now() < __t ? cv_status::no_timeout : cv_status::timeout;
+}
+
+template <class _Clock, class _Duration, class _Predicate>
+bool
+condition_variable::wait_until(unique_lock<mutex>& __lk,
+                   const chrono::time_point<_Clock, _Duration>& __t,
+                   _Predicate __pred)
+{
+    while (!__pred())
+    {
+        if (wait_until(__lk, __t) == cv_status::timeout)
+            return __pred();
+    }
+    return true;
+}
+
+template <class _Rep, class _Period>
+cv_status
+condition_variable::wait_for(unique_lock<mutex>& __lk,
+                             const chrono::duration<_Rep, _Period>& __d)
+{
+    using namespace chrono;
+    if (__d <= __d.zero())
+        return cv_status::timeout;
+    typedef time_point<system_clock, duration<long double, nano> > __sys_tpf;
+    typedef time_point<system_clock, nanoseconds> __sys_tpi;
+    __sys_tpf _Max = __sys_tpi::max();
+    system_clock::time_point __s_now = system_clock::now();
+    steady_clock::time_point __c_now = steady_clock::now();
+    if (_Max - __d > __s_now)
+        __do_timed_wait(__lk, __s_now + __ceil<nanoseconds>(__d));
+    else
+        __do_timed_wait(__lk, __sys_tpi::max());
+    return steady_clock::now() - __c_now < __d ? cv_status::no_timeout :
+                                                 cv_status::timeout;
+}
+
+template <class _Rep, class _Period, class _Predicate>
+inline bool
+condition_variable::wait_for(unique_lock<mutex>& __lk,
+                             const chrono::duration<_Rep, _Period>& __d,
+                             _Predicate __pred)
+{
+    return wait_until(__lk, chrono::steady_clock::now() + __d,
+                      move(__pred));
+}
+
+class recursive_mutex
+{
+    pthread_mutex_t __m_;
+
+public:
+     recursive_mutex();
+     ~recursive_mutex();
+
+private:
+    recursive_mutex(const recursive_mutex&); // = delete;
+    recursive_mutex& operator=(const recursive_mutex&); // = delete;
+
+public:
+    void lock();
+    bool try_lock() noexcept;
+    void unlock()  noexcept;
+
+    typedef pthread_mutex_t* native_handle_type;
+        native_handle_type native_handle() {return &__m_;}
+};
+
+class timed_mutex
+{
+    mutex              __m_;
+    condition_variable __cv_;
+    bool               __locked_;
+public:
+     timed_mutex();
+     ~timed_mutex();
+
+private:
+    timed_mutex(const timed_mutex&); // = delete;
+    timed_mutex& operator=(const timed_mutex&); // = delete;
+
+public:
+    void lock();
+    bool try_lock() noexcept;
+    template <class _Rep, class _Period>
+                bool try_lock_for(const chrono::duration<_Rep, _Period>& __d)
+            {return try_lock_until(chrono::steady_clock::now() + __d);}
+    template <class _Clock, class _Duration>
+        bool try_lock_until(const chrono::time_point<_Clock, _Duration>& __t);
+    void unlock() noexcept;
+};
+
+template <class _Clock, class _Duration>
+bool
+timed_mutex::try_lock_until(const chrono::time_point<_Clock, _Duration>& __t)
+{
+    using namespace chrono;
+    unique_lock<mutex> __lk(__m_);
+    bool no_timeout = _Clock::now() < __t;
+    while (no_timeout && __locked_)
+        no_timeout = __cv_.wait_until(__lk, __t) == cv_status::no_timeout;
+    if (!__locked_)
+    {
+        __locked_ = true;
+        return true;
+    }
+    return false;
+}
+
+class recursive_timed_mutex
+{
+    mutex              __m_;
+    condition_variable __cv_;
+    size_t             __count_;
+    pthread_t          __id_;
+public:
+     recursive_timed_mutex();
+     ~recursive_timed_mutex();
+
+private:
+    recursive_timed_mutex(const recursive_timed_mutex&); // = delete;
+    recursive_timed_mutex& operator=(const recursive_timed_mutex&); // = delete;
+
+public:
+    void lock();
+    bool try_lock() noexcept;
+    template <class _Rep, class _Period>
+                bool try_lock_for(const chrono::duration<_Rep, _Period>& __d)
+            {return try_lock_until(chrono::steady_clock::now() + __d);}
+    template <class _Clock, class _Duration>
+        bool try_lock_until(const chrono::time_point<_Clock, _Duration>& __t);
+    void unlock() noexcept;
+};
+
+template <class _Clock, class _Duration>
+bool
+recursive_timed_mutex::try_lock_until(const chrono::time_point<_Clock, _Duration>& __t)
+{
+    using namespace chrono;
+    pthread_t __id = pthread_self();
+    unique_lock<mutex> lk(__m_);
+    if (pthread_equal(__id, __id_))
+    {
+        if (__count_ == numeric_limits<size_t>::max())
+            return false;
+        ++__count_;
+        return true;
+    }
+    bool no_timeout = _Clock::now() < __t;
+    while (no_timeout && __count_ != 0)
+        no_timeout = __cv_.wait_until(lk, __t) == cv_status::no_timeout;
+    if (__count_ == 0)
+    {
+        __count_ = 1;
+        __id_ = __id;
+        return true;
+    }
+    return false;
+}
+
+template <class _L0, class _L1>
+int
+try_lock(_L0& __l0, _L1& __l1)
+{
+    unique_lock<_L0> __u0(__l0, try_to_lock);
+    if (__u0.owns_lock())
+    {
+        if (__l1.try_lock())
+        {
+            __u0.release();
+            return -1;
+        }
+        else
+            return 1;
+    }
+    return 0;
+}
+
+#ifndef _LIBCPP_HAS_NO_VARIADICS
+
+template <class _L0, class _L1, class _L2, class... _L3>
+int
+try_lock(_L0& __l0, _L1& __l1, _L2& __l2, _L3&... __l3)
+{
+    int __r = 0;
+    unique_lock<_L0> __u0(__l0, try_to_lock);
+    if (__u0.owns_lock())
+    {
+        __r = try_lock(__l1, __l2, __l3...);
+        if (__r == -1)
+            __u0.release();
+        else
+            ++__r;
+    }
+    return __r;
+}
+
+#endif  // _LIBCPP_HAS_NO_VARIADICS
+
+template <class _L0, class _L1>
+void
+lock(_L0& __l0, _L1& __l1)
+{
+    while (true)
+    {
+        {
+            unique_lock<_L0> __u0(__l0);
+            if (__l1.try_lock())
+            {
+                __u0.release();
+                break;
+            }
+        }
+        sched_yield();
+        {
+            unique_lock<_L1> __u1(__l1);
+            if (__l0.try_lock())
+            {
+                __u1.release();
+                break;
+            }
+        }
+        sched_yield();
+    }
+}
+
+#ifndef _LIBCPP_HAS_NO_VARIADICS
+
+template <class _L0, class _L1, class _L2, class ..._L3>
+void
+__lock_first(int __i, _L0& __l0, _L1& __l1, _L2& __l2, _L3& ...__l3)
+{
+    while (true)
+    {
+        switch (__i)
+        {
+        case 0:
+            {
+                unique_lock<_L0> __u0(__l0);
+                __i = try_lock(__l1, __l2, __l3...);
+                if (__i == -1)
+                {
+                    __u0.release();
+                    return;
+                }
+            }
+            ++__i;
+            sched_yield();
+            break;
+        case 1:
+            {
+                unique_lock<_L1> __u1(__l1);
+                __i = try_lock(__l2, __l3..., __l0);
+                if (__i == -1)
+                {
+                    __u1.release();
+                    return;
+                }
+            }
+            if (__i == sizeof...(_L3) + 1)
+                __i = 0;
+            else
+                __i += 2;
+            sched_yield();
+            break;
+        default:
+            __lock_first(__i - 2, __l2, __l3..., __l0, __l1);
+            return;
+        }
+    }
+}
+
+template <class _L0, class _L1, class _L2, class ..._L3>
+inline void
+lock(_L0& __l0, _L1& __l1, _L2& __l2, _L3& ...__l3)
+{
+    __lock_first(0, __l0, __l1, __l2, __l3...);
+}
+
+#endif  // _LIBCPP_HAS_NO_VARIADICS
+
+#endif // !_LIBCPP_HAS_NO_THREADS
+
+struct_ONLY once_flag;
+
+template<class _Callable, class... _Args>
+void call_once(once_flag&, _Callable&&, _Args&&...);
+
+
+struct_ONLY once_flag
+{
+        _LIBCPP_CONSTEXPR
+        once_flag() noexcept : __state_(0) {}
+
+private:
+    once_flag(const once_flag&); // = delete;
+    once_flag& operator=(const once_flag&); // = delete;
+
+    unsigned long __state_;
+
+    template<class _Callable, class... _Args>
+    friend
+    void call_once(once_flag&, _Callable&&, _Args&&...);
+
+};
+
+#ifndef _LIBCPP_HAS_NO_VARIADICS
+
+template <class _Fp>
+class __call_once_param
+{
+    _Fp& __f_;
+public:
+        explicit __call_once_param(_Fp& __f) : __f_(__f) {}
+
+        void operator()()
+    {
+        typedef typename __make_tuple_indices<tuple_size<_Fp>::value, 1>::type _Index;
+        __execute(_Index());
+    }
+
+private:
+    template <size_t ..._Indices>
+        void __execute(__tuple_indices<_Indices...>)
+    {
+        __invoke(get<0>(move(__f_)), get<_Indices>(move(__f_))...);
+    }
+};
+
+#else
+
+template <class _Fp>
+class __call_once_param
+{
+    _Fp& __f_;
+public:
+        explicit __call_once_param(_Fp& __f) : __f_(__f) {}
+
+        void operator()()
+    {
+        __f_();
+    }
+};
+
+#endif
+
+template <class _Fp>
+void
+__call_once_proxy(void* __vp)
+{
+    __call_once_param<_Fp>* __p = static_cast<__call_once_param<_Fp>*>(__vp);
+    (*__p)();
+}
+
+_LIBCPP_FUNC_VIS void __call_once(volatile unsigned long&, void*, void(*)(void*));
+
+#ifndef _LIBCPP_HAS_NO_VARIADICS
+
+template<class _Callable, class... _Args>
+inline void
+call_once(once_flag& __flag, _Callable&& __func, _Args&&... __args)
+{
+    if (__libcpp_relaxed_load(&__flag.__state_) != ~0ul)
+    {
+        typedef tuple<_Callable&&, _Args&&...> _Gp;
+        _Gp __f(forward<_Callable>(__func), forward<_Args>(__args)...);
+        __call_once_param<_Gp> __p(__f);
+        __call_once(__flag.__state_, &__p, &__call_once_proxy<_Gp>);
+    }
+}
+
+#else  // _LIBCPP_HAS_NO_VARIADICS
+
+template<class _Callable>
+inline void
+call_once(once_flag& __flag, _Callable& __func)
+{
+    if (__libcpp_relaxed_load(&__flag.__state_) != ~0ul)
+    {
+        __call_once_param<_Callable> __p(__func);
+        __call_once(__flag.__state_, &__p, &__call_once_proxy<_Callable>);
+    }
+}
+
+template<class _Callable>
+inline void
+call_once(once_flag& __flag, const _Callable& __func)
+{
+    if (__flag.__state_ != ~0ul)
+    {
+        __call_once_param<const _Callable> __p(__func);
+        __call_once(__flag.__state_, &__p, &__call_once_proxy<const _Callable>);
+    }
+}
+
+}

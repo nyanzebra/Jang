@@ -1,0 +1,16 @@
+#pragma once
+
+#include "supported_operations"
+
+namespace jang {
+
+template <typename Iterator, typename = enable_if_type<is_iterator<Iterator>::value>>
+struct iterator_traits {
+	typedef remove_reference_type<remove_const_volatile_type<typename Iterator::type>> type;
+
+	typedef type value_type;
+	typedef type& reference_type;
+	typedef const type& const_reference_type;
+};
+
+}

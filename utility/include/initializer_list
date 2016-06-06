@@ -7,8 +7,6 @@ namespace jang {
 template <typename T>
 class initializer_list {
 public:
-	typedef initializer_list<T> self_type;
-
 
 protected:
 

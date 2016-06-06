@@ -1,0 +1,29 @@
+#pragma once
+
+namespace {
+	
+template <typename T>
+struct remove_reference { typedef T type; };
+
+template <typename T>
+struct remove_reference<T&> { typedef T type; };
+
+template <typename T>
+struct remove_reference<T&&> { typedef T type; };
+
+template <typename T>
+using remove_reference_type = typename remove_reference<T>::type;
+
+template <typename T>
+struct add_lvalue_reference { typedef T& type; };
+
+template <typename T>
+using add_lvalue_reference_type = typename add_lvalue_reference<T>::type;
+
+template <typename T>
+struct add_rvalue_reference { typedef T&& type; };
+
+template <typename T>
+using add_rvalue_reference_type = typename add_rvalue_reference<T>::type;
+
+}

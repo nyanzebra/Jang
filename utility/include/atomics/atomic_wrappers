@@ -1,0 +1,120 @@
+#pragma once
+
+#include "../type_traits"
+
+namespace jang {
+	
+template <typename T>
+constexpr bool is_atomic_assignable_as_atomic_type_value = is_atomic_assignable<atomic_type(T)*, T>::value;
+
+template <typename T>
+constexpr bool is_atomic_assignable_as_volatile_atomic_type_value = is_atomic_assignable<volatile atomic_type(T)*, T>::value;
+
+template <typename T>
+static inline enable_if_type<is_atomic_assignable_as_volatile_atomic_type_value<T>> atomic_init(volatile atomic_type(T)* volatile_atomic, T value) { volatile_atomic->value = value; }
+
+template <typename T>
+static inline enable_if_type<!is_atomic_assignable_as_volatile_atomic_type_value<T> && is_atomic_assignable_as_atomic_type_value<T>> atomic_init(volatile atomic_type(T)* volatile_atomic, T value) {
+	volatile char* to = reinterpret_cast<volatile char*>(&volatile_atomic->value);
+	volatile char* end = to + sizeof(T);
+	char* from = reinterpret_cast<char*>(&value);
+	while (to != end) *to++ = *from++;
+}
+
+template <typename T>
+static inline void atomic_init(atomic_type(T)* atomic, T value) { atomic->value = value; }
+
+static inline void atomic_thread_fence(memory_order order) { __atomic_thread_fence((unsigned int) order); }
+
+static inline void atomic_signal_fence(memory_order order) { __atomic_signal_fence((unsigned int) order); }
+
+template <typename T>
+static inline void atomic_store(volatile atomic_type(T)* atomic, T value, memory_order order) { return __atomic_store(&atomic->value, &value, (unsigned int) order); }
+
+template <typename T>
+static inline void atomic_store(atomic_type(T)* atomic, T value, memory_order order) { __atomic_store(&atomic->value, &value, (unsigned int) order); }
+
+template <typename T>
+static inline T atomic_load(volatile atomic_type(T)* atomic, memory_order order) {
+  T result;
+  __atomic_load(&atomic->value, &result, order);
+  return result;
+}
+
+template <typename T>
+static inline T atomic_load(atomic_type(T)* atomic, memory_order order) {
+  T result;
+  __atomic_load(&atomic->value, &result, (unsigned int) order);
+  return result;
+}
+
+template <typename T>
+static inline T atomic_exchange(volatile atomic_type(T)* atomic, T value, memory_order order) {
+  T result;
+  __atomic_exchange(&atomic->value, &value, &result, (unsigned int) order);
+  return result;
+}
+
+template <typename T>
+static inline T atomic_exchange(atomic_type(T)* atomic, T value, memory_order order) {
+  T result;
+  __atomic_exchange(&atomic->value, &value, &result, (unsigned int) order);
+  return result;
+}
+
+template <typename T>
+static inline bool atomic_compare_exchange_strong(volatile atomic_type(T)* atomic, T* expected, T value, memory_order success, memory_order failure) { return __atomic_compare_exchange(&atomic->value, expected, &value, false, (unsigned int) success, (unsigned int) failure); }
+
+template <typename T>
+static inline bool atomic_compare_exchange_strong(atomic_type(T)* atomic, T* expected, T value, memory_order success, memory_order failure) { return __atomic_compare_exchange(&atomic->value, expected, &value, false, (unsigned int) success, (unsigned int) failure); }
+
+template <typename T>
+static inline bool atomic_compare_exchange_weak(volatile atomic_type(T)* atomic, T* expected, T value, memory_order success, memory_order failure) { return __atomic_compare_exchange(&atomic->value, expected, &value, true, (unsigned int) success, (unsigned int) failure); }
+
+template <typename T>
+static inline bool atomic_compare_exchange_weak(atomic_type(T)* atomic, T* expected, T value, memory_order success, memory_order failure) { return __atomic_compare_exchange(&atomic->value, expected, &value, true, (unsigned int) success, (unsigned int) failure); }
+
+template <typename T>
+struct skip_amount { enum {value = 1}; };
+
+template <typename T>
+struct skip_amount<T*> { enum {value = sizeof(T)}; };
+
+// FIXME: Haven't figured out what the spec says about using arrays with
+// atomic_fetch_add. Force a failure rather than creating bad behavior.
+template <typename T>
+struct skip_amount<T[]> { };
+template <typename T, int n>
+struct skip_amount<T[n]> { };
+
+template <typename T, typename U>
+static inline T atomic_fetch_add(volatile atomic_type(T)* atomic, U delta, memory_order order) { return __atomic_fetch_add(&atomic->value, delta * skip_amount<T>::value, (unsigned int) order); }
+
+template <typename T, typename U>
+static inline T atomic_fetch_add(atomic_type(T)* atomic, U delta, memory_order order) { return __atomic_fetch_add(&atomic->value, delta * skip_amount<T>::value, (unsigned int) order); }
+
+template <typename T, typename U>
+static inline T atomic_fetch_sub(volatile atomic_type(T)* atomic, U delta, memory_order order) { return __atomic_fetch_sub(&atomic->value, delta * skip_amount<T>::value, (unsigned int) order); }
+
+template <typename T, typename U>
+static inline T atomic_fetch_sub(atomic_type(T)* atomic, U delta, memory_order order) { return __atomic_fetch_sub(&atomic->value, delta * skip_amount<T>::value, (unsigned int) order); }
+
+template <typename T>
+static inline T atomic_fetch_and(volatile atomic_type(T)* atomic, T pattern, memory_order order) { return __atomic_fetch_and(&atomic->value, pattern, (unsigned int) order); }
+
+template <typename T>
+static inline T atomic_fetch_and(atomic_type(T)* atomic, T pattern, memory_order order) { return __atomic_fetch_and(&atomic->value, pattern, (unsigned int) order); }
+
+template <typename T>
+static inline T atomic_fetch_or(volatile atomic_type(T)* atomic, T pattern, memory_order order) { return __atomic_fetch_or(&atomic->value, pattern, (unsigned int) order); }
+
+template <typename T>
+static inline T atomic_fetch_or(atomic_type(T)* atomic, T pattern, memory_order order) { return __atomic_fetch_or(&atomic->value, pattern, (unsigned int) order); }
+
+template <typename T>
+static inline T atomic_fetch_xor(volatile atomic_type(T)* atomic, T pattern, memory_order order) { return __atomic_fetch_xor(&atomic->value, pattern, (unsigned int) order); }
+
+template <typename T>
+static inline T atomic_fetch_xor(atomic_type(T)* atomic, T pattern, memory_order order) { return __atomic_fetch_xor(&atomic->value, pattern, (unsigned int) order); }
+
+}

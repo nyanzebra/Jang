@@ -1,12 +1,33 @@
 #pragma once
 
-#include <math.h>
+#include "types"
+#include "type_traits"
+
+#include "mathematics/operations"
 
 namespace jang {
-namespace maths {
 
 template<size_type N>
 constexpr bool is_valid_precision() { return (N - 1) < N; }
+
+template <typename T>
+double power(T value, int n) {
+	switch (n) {
+	case 0:
+		return 1;
+	case 1:
+		return value;
+	case -1:
+		return 1 / value;
+	default:
+		return value * power(value, (n < 0 ? n + 1 : n - 1));
+	}
+}
+
+template <typename T>
+double round(T value) {
+
+}
 
 template <typename T, size_type N>
 struct precision {
@@ -18,9 +39,8 @@ struct precision {
 	~precision() = default;
 
 	T val;
-	T to_precise() { auto Q = pow(10, N - 1); return round(val * Q) / Q; }
+	T to_precise() { auto Q = power(10, N - 1); return round(val * Q) / Q; }
 };
 
-}
 }
 

@@ -1,0 +1,24 @@
+#pragma once
+
+namespace jang {
+
+template <typename T>
+struct atomic_type {
+	T value;
+
+	atomic_type() noexcept{}
+	constexpr explicit atomic_type(T value) noexcept : value(value){}
+};
+
+#define atomic_type(x) atomic_type<x>
+
+typedef enum class memory_order : char {
+	relaxed,
+	consume,
+	acquire,
+	release,
+	acquire_release,
+	sequential_consistency
+} memory_order;
+
+}

@@ -1,0 +1,31 @@
+#pragma once
+
+#include "../type_traits_categories/const_volatility_specifiers"
+#include "../type_traits_categories/fundamental_constants"
+
+namespace jang {
+
+template <size_type N> 
+struct placeholder {};
+
+extern placeholder<1>   _1;
+extern placeholder<2>   _2;
+extern placeholder<3>   _3;
+extern placeholder<4>   _4;
+extern placeholder<5>   _5;
+extern placeholder<6>   _6;
+extern placeholder<7>   _7;
+extern placeholder<8>   _8;
+extern placeholder<9>   _9;
+extern placeholder<10> _10;
+
+template<typename T> 
+struct __is_placeholder : public integral_constant<size_type, 0> {};
+
+template<int N>
+struct __is_placeholder<placeholder<N>> : public integral_constant<size_type, N> {};
+
+template<typename T> 
+struct is_placeholder : public __is_placeholder<remove_const_volatile_type<T>> {};
+
+}

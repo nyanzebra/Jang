@@ -1,63 +1,579 @@
 #pragma once
 
-#include "type_traits"
+#include "functionals/operations"
+#include "type_info"
 
 namespace jang {
 
-template <typename T = void> 
-struct comparator {
-	virtual bool operator()()
+struct bad_function_call : public exception {};
+
+template<typename Function> class function;
+
+namespace __function {
+
+template<typename Function> 
+class function_base;
+
+template<typename Result, typename ...Args>
+class function_base<Result(Args...)> {
+public:
+protected:
+private:
+public:
+    function_base() {}
+    function_base(const function_base&) = delete;
+    function_base& operator=(const function_base&) = delete;
+    virtual ~function_base() {}
+
+    virtual function_base* __clone() const = 0;
+    virtual void __clone(function_base*) const = 0;
+    virtual void destroy() noexcept = 0;
+    virtual void destroy_deallocate() noexcept = 0;
+    virtual Result operator()(Args&& ...) = 0;
+
+    virtual const void* target(const type_info&) const noexcept = 0;
+    virtual const type_info& target_type() const noexcept = 0;
+protected:
+private:
 };
 
-template <typename Return, typename... Args>
-class signature {
+template<class _FD, class Allocator, class _FB> class __func;
+
+template<class Function, class Allocator, class Result, class ...Args>
+class __func<Function, Allocator, Result(Args...)>
+    : public  function_base<Result(Args...)>
+{
+    pair<Function, Allocator> __f_;
 public:
-	typedef signature<Return, Args...> self_type;
+    
+    explicit __func(Function&& function)
+        : __f_(piecewise_construct, forward_as_tuple(move(function)),
+                                    forward_as_tuple()) {}
+    
+    explicit __func(const Function& function, const Allocator& __a)
+        : __f_(piecewise_construct, forward_as_tuple(function),
+                                    forward_as_tuple(__a)) {}
+
+    
+    explicit __func(const Function& function, Allocator&& __a)
+        : __f_(piecewise_construct, forward_as_tuple(function),
+                                    forward_as_tuple(move(__a))) {}
+
+    
+    explicit __func(Function&& function, Allocator&& __a)
+        : __f_(piecewise_construct, forward_as_tuple(move(function)),
+                                    forward_as_tuple(move(__a))) {}
+    virtual function_base<Result(Args...)>* __clone() const;
+    virtual void __clone(function_base<Result(Args...)>*) const;
+    virtual void destroy() noexcept;
+    virtual void destroy_deallocate() noexcept;
+    virtual Result operator()(Args&& ... __arg);
+    virtual const void* target(const type_info&) const noexcept;
+    virtual const std::type_info& target_type() const noexcept;
+};
+
+template<class Function, class Allocator, class Result, class ...Args>
+function_base<Result(Args...)>*
+__func<Function, Allocator, Result(Args...)>::__clone() const
+{
+    typedef allocator_traits<Allocator> __alloc_traits;
+    typedef typename __rebind_alloc_helper<__alloc_traits, __func>::type _Ap;
+    _Ap __a(__f_.second());
+    typedef __allocator_destructor<_Ap> _Dp;
+    unique_ptr<__func, _Dp> __hold(__a.allocate(1), _Dp(__a, 1));
+    ::new (__hold.get()) __func(__f_.first(), Allocator(__a));
+    return __hold.release();
+}
+
+template<class Function, class Allocator, class Result, class ...Args>
+void
+__func<Function, Allocator, Result(Args...)>::__clone(function_base<Result(Args...)>* __p) const
+{
+    ::new (__p) __func(__f_.first(), __f_.second());
+}
+
+template<class Function, class Allocator, class Result, class ...Args>
+void
+__func<Function, Allocator, Result(Args...)>::destroy() noexcept
+{
+    __f_.~pair<Function, Allocator>();
+}
+
+template<class Function, class Allocator, class Result, class ...Args>
+void
+__func<Function, Allocator, Result(Args...)>::destroy_deallocate() noexcept
+{
+    typedef allocator_traits<Allocator> __alloc_traits;
+    typedef typename __rebind_alloc_helper<__alloc_traits, __func>::type _Ap;
+    _Ap __a(__f_.second());
+    __f_.~pair<Function, Allocator>();
+    __a.deallocate(this, 1);
+}
+
+template<class Function, class Allocator, class Result, class ...Args>
+Result
+__func<Function, Allocator, Result(Args...)>::operator()(Args&& ... __arg)
+{
+    typedef __invoke_void_return_wrapper<Result> _Invoker;
+    return _Invoker::__call(__f_.first(), forward<Args>(__arg)...);
+}
+
+
+template<class Function, class Allocator, class Result, class ...Args>
+const void*
+__func<Function, Allocator, Result(Args...)>::target(const type_info& __ti) const noexcept
+{
+    if (__ti == typeid(Function))
+        return &__f_.first();
+    return (const void*)0;
+}
+
+template<class Function, class Allocator, class Result, class ...Args>
+const std::type_info&
+__func<Function, Allocator, Result(Args...)>::target_type() const noexcept
+{
+    return typeid(Function);
+}
+
+
+}  // __function
+
+template<class Result, class ...Args>
+class function<Result(Args...)>
+{
+    typedef __function::function_base<Result(Args...)> function_base;
+    typename aligned_storage<3*sizeof(void*)>::type __buf_;
+    function_base* __f_;
+
+    template <class Function>
+        
+        static bool __not_null(const Function&) {return true;}
+    template <class _R2, class ..._Ap>
+        
+        static bool __not_null(_R2 (*__p)(_Ap...)) {return __p;}
+    template <class _R2, class _Cp, class ..._Ap>
+        
+        static bool __not_null(_R2 (_Cp::*__p)(_Ap...)) {return __p;}
+    template <class _R2, class _Cp, class ..._Ap>
+        
+        static bool __not_null(_R2 (_Cp::*__p)(_Ap...) const) {return __p;}
+    template <class _R2, class _Cp, class ..._Ap>
+        
+        static bool __not_null(_R2 (_Cp::*__p)(_Ap...) volatile) {return __p;}
+    template <class _R2, class _Cp, class ..._Ap>
+        
+        static bool __not_null(_R2 (_Cp::*__p)(_Ap...) const volatile) {return __p;}
+    template <class _R2, class ..._Ap>
+        
+        static bool __not_null(const function<_R2(_Ap...)>& __p) {return !!__p;}
+
+    template <class Function, bool = !is_same<Function, function>::value &&
+                                __invokable<Function&, Args...>::value>
+        struct __callable;
+    template <class Function>
+        struct __callable<Function, true>
+        {
+            static const bool value = is_same<void, Result>::value ||
+                is_convertible<typename __invoke_of<Function&, Args...>::type,
+                               Result>::value;
+        };
+    template <class Function>
+        struct __callable<Function, false>
+        {
+            static const bool value = false;
+        };
+public:
+    typedef Result result_type;
+
+    // construct/copy/destroy:
+    
+    function() noexcept : __f_(0) {}
+    
+    function(nullptr_t) noexcept : __f_(0) {}
+    function(const function&);
+    function(function&&) noexcept;
+    template<class Function>
+      function(Function, typename enable_if
+                                     <
+                                        __callable<Function>::value &&
+                                        !is_same<Function, function>::value
+                                      >::type* = 0);
+
+    template<class Allocator>
+      
+      function(allocator_arg_t, const Allocator&) noexcept : __f_(0) {}
+    template<class Allocator>
+      
+      function(allocator_arg_t, const Allocator&, nullptr_t) noexcept : __f_(0) {}
+    template<class Allocator>
+      function(allocator_arg_t, const Allocator&, const function&);
+    template<class Allocator>
+      function(allocator_arg_t, const Allocator&, function&&);
+    template<class Function, class Allocator>
+      function(allocator_arg_t, const Allocator& __a, Function function,
+               typename enable_if<__callable<Function>::value>::type* = 0);
+
+    function& operator=(const function&);
+    function& operator=(function&&) noexcept;
+    function& operator=(nullptr_t) noexcept;
+    template<class Function>
+      typename enable_if
+      <
+        __callable<typename decay<Function>::type>::value &&
+        !is_same<typename remove_reference<Function>::type, function>::value,
+        function&
+      >::type
+      operator=(Function&&);
+
+    ~function();
+
+    // function modifiers:
+    void swap(function&) noexcept;
+    template<class Function, class Allocator>
+      
+      void assign(Function&& function, const Allocator& __a)
+        {function(allocator_arg, __a, forward<Function>(function)).swap(*this);}
+
+    // function capacity:
+    
+        _LIBCPP_EXPLICIT operator bool() const noexcept {return __f_;}
+
+    // deleted overloads close possible hole in the type system
+    template<class _R2, class... Args2>
+      bool operator==(const function<_R2(Args2...)>&) const = delete;
+    template<class _R2, class... Args2>
+      bool operator!=(const function<_R2(Args2...)>&) const = delete;
+public:
+    // function invocation:
+    Result operator()(Args...) const;
+
+    // function target access:
+    const std::type_info& target_type() const noexcept;
+    template <typename _Tp> _Tp* target() noexcept;
+    template <typename _Tp> const _Tp* target() const noexcept;
+};
+
+template<class Result, class ...Args>
+function<Result(Args...)>::function(const function& function)
+{
+    if (function.__f_ == 0)
+        __f_ = 0;
+    else if (function.__f_ == (const function_base*)&function.__buf_)
+    {
+        __f_ = (function_base*)&__buf_;
+        function.__f_->__clone(__f_);
+    }
+    else
+        __f_ = function.__f_->__clone();
+}
+
+template<class Result, class ...Args>
+template <class Allocator>
+function<Result(Args...)>::function(allocator_arg_t, const Allocator&,
+                                     const function& function)
+{
+    if (function.__f_ == 0)
+        __f_ = 0;
+    else if (function.__f_ == (const function_base*)&function.__buf_)
+    {
+        __f_ = (function_base*)&__buf_;
+        function.__f_->__clone(__f_);
+    }
+    else
+        __f_ = function.__f_->__clone();
+}
+
+template<class Result, class ...Args>
+function<Result(Args...)>::function(function&& function) noexcept
+{
+    if (function.__f_ == 0)
+        __f_ = 0;
+    else if (function.__f_ == (function_base*)&function.__buf_)
+    {
+        __f_ = (function_base*)&__buf_;
+        function.__f_->__clone(__f_);
+    }
+    else
+    {
+        __f_ = function.__f_;
+        function.__f_ = 0;
+    }
+}
+
+template<class Result, class ...Args>
+template <class Allocator>
+function<Result(Args...)>::function(allocator_arg_t, const Allocator&,
+                                     function&& function)
+{
+    if (function.__f_ == 0)
+        __f_ = 0;
+    else if (function.__f_ == (function_base*)&function.__buf_)
+    {
+        __f_ = (function_base*)&__buf_;
+        function.__f_->__clone(__f_);
+    }
+    else
+    {
+        __f_ = function.__f_;
+        function.__f_ = 0;
+    }
+}
+
+template<class Result, class ...Args>
+template <class Function>
+function<Result(Args...)>::function(Function function,
+                                     typename enable_if
+                                     <
+                                        __callable<Function>::value &&
+                                        !is_same<Function, function>::value
+                                     >::type*)
+    : __f_(0)
+{
+    if (__not_null(function))
+    {
+        typedef __function::__func<Function, allocator<Function>, Result(Args...)> _FF;
+        if (sizeof(_FF) <= sizeof(__buf_) && is_nothrow_copy_constructible<Function>::value)
+        {
+            __f_ = (function_base*)&__buf_;
+            ::new (__f_) _FF(move(function));
+        }
+        else
+        {
+            typedef allocator<_FF> _Ap;
+            _Ap __a;
+            typedef __allocator_destructor<_Ap> _Dp;
+            unique_ptr<function_base, _Dp> __hold(__a.allocate(1), _Dp(__a, 1));
+            ::new (__hold.get()) _FF(move(function), allocator<Function>(__a));
+            __f_ = __hold.release();
+        }
+    }
+}
+
+template<class Result, class ...Args>
+template <class Function, class Allocator>
+function<Result(Args...)>::function(allocator_arg_t, const Allocator& __a0, Function function,
+                                     typename enable_if<__callable<Function>::value>::type*)
+    : __f_(0)
+{
+    typedef allocator_traits<Allocator> __alloc_traits;
+    if (__not_null(function))
+    {
+        typedef __function::__func<Function, Allocator, Result(Args...)> _FF;
+        typedef typename __rebind_alloc_helper<__alloc_traits, _FF>::type _Ap;
+        _Ap __a(__a0);
+        if (sizeof(_FF) <= sizeof(__buf_) && 
+            is_nothrow_copy_constructible<Function>::value && is_nothrow_copy_constructible<_Ap>::value)
+        {
+            __f_ = (function_base*)&__buf_;
+            ::new (__f_) _FF(move(function), Allocator(__a));
+        }
+        else
+        {
+            typedef __allocator_destructor<_Ap> _Dp;
+            unique_ptr<function_base, _Dp> __hold(__a.allocate(1), _Dp(__a, 1));
+            ::new (__hold.get()) _FF(move(function), Allocator(__a));
+            __f_ = __hold.release();
+        }
+    }
+}
+
+template<class Result, class ...Args>
+function<Result(Args...)>&
+function<Result(Args...)>::operator=(const function& function)
+{
+    function(function).swap(*this);
+    return *this;
+}
+
+template<class Result, class ...Args>
+function<Result(Args...)>&
+function<Result(Args...)>::operator=(function&& function) noexcept
+{
+    if (__f_ == (function_base*)&__buf_)
+        __f_->destroy();
+    else if (__f_)
+        __f_->destroy_deallocate();
+    __f_ = 0;
+    if (function.__f_ == 0)
+        __f_ = 0;
+    else if (function.__f_ == (function_base*)&function.__buf_)
+    {
+        __f_ = (function_base*)&__buf_;
+        function.__f_->__clone(__f_);
+    }
+    else
+    {
+        __f_ = function.__f_;
+        function.__f_ = 0;
+    }
+    return *this;
+}
+
+template<class Result, class ...Args>
+function<Result(Args...)>&
+function<Result(Args...)>::operator=(nullptr_t) noexcept
+{
+    if (__f_ == (function_base*)&__buf_)
+        __f_->destroy();
+    else if (__f_)
+        __f_->destroy_deallocate();
+    __f_ = 0;
+    return *this;
+}
+
+template<class Result, class ...Args>
+template <class Function>
+typename enable_if
+<
+    function<Result(Args...)>::template __callable<typename decay<Function>::type>::value &&
+    !is_same<typename remove_reference<Function>::type, function<Result(Args...)>>::value,
+    function<Result(Args...)>&
+>::type
+function<Result(Args...)>::operator=(Function&& function)
+{
+    function(forward<Function>(function)).swap(*this);
+    return *this;
+}
+
+template<class Result, class ...Args>
+function<Result(Args...)>::~function()
+{
+    if (__f_ == (function_base*)&__buf_)
+        __f_->destroy();
+    else if (__f_)
+        __f_->destroy_deallocate();
+}
+
+template<class Result, class ...Args>
+void
+function<Result(Args...)>::swap(function& function) noexcept
+{
+    if (__f_ == (function_base*)&__buf_ && function.__f_ == (function_base*)&function.__buf_)
+    {
+        typename aligned_storage<sizeof(__buf_)>::type __tempbuf;
+        function_base* __t = (function_base*)&__tempbuf;
+        __f_->__clone(__t);
+        __f_->destroy();
+        __f_ = 0;
+        function.__f_->__clone((function_base*)&__buf_);
+        function.__f_->destroy();
+        function.__f_ = 0;
+        __f_ = (function_base*)&__buf_;
+        __t->__clone((function_base*)&function.__buf_);
+        __t->destroy();
+        function.__f_ = (function_base*)&function.__buf_;
+    }
+    else if (__f_ == (function_base*)&__buf_)
+    {
+        __f_->__clone((function_base*)&function.__buf_);
+        __f_->destroy();
+        __f_ = function.__f_;
+        function.__f_ = (function_base*)&function.__buf_;
+    }
+    else if (function.__f_ == (function_base*)&function.__buf_)
+    {
+        function.__f_->__clone((function_base*)&__buf_);
+        function.__f_->destroy();
+        function.__f_ = __f_;
+        __f_ = (function_base*)&__buf_;
+    }
+    else
+        swap(__f_, function.__f_);
+}
+
+template<class Result, class ...Args>
+Result
+function<Result(Args...)>::operator()(Args... __arg) const
+{
+#ifndef _LIBCPP_NO_EXCEPTIONS
+    if (__f_ == 0)
+        throw bad_function_call();
+#endif  // _LIBCPP_NO_EXCEPTIONS
+    return (*__f_)(forward<Args>(__arg)...);
+}
+
+template<class Result, class ...Args>
+const std::type_info&
+function<Result(Args...)>::target_type() const noexcept
+{
+    if (__f_ == 0)
+        return typeid(void);
+    return __f_->target_type();
+}
+
+template<class Result, class ...Args>
+template <typename _Tp>
+_Tp*
+function<Result(Args...)>::target() noexcept
+{
+    if (__f_ == 0)
+        return (_Tp*)0;
+    return (_Tp*)__f_->target(typeid(_Tp));
+}
+
+template<class Result, class ...Args>
+template <typename _Tp>
+const _Tp*
+function<Result(Args...)>::target() const noexcept
+{
+    if (__f_ == 0)
+        return (const _Tp*)0;
+    return (const _Tp*)__f_->target(typeid(_Tp));
+}
+
+
+template <class Result, class... Args>
+inline 
+bool
+operator==(const function<Result(Args...)>& function, nullptr_t) noexcept {return !function;}
+
+template <class Result, class... Args>
+inline 
+bool
+operator==(nullptr_t, const function<Result(Args...)>& function) noexcept {return !function;}
+
+template <class Result, class... Args>
+inline 
+bool
+operator!=(const function<Result(Args...)>& function, nullptr_t) noexcept {return (bool)function;}
+
+template <class Result, class... Args>
+inline 
+bool
+operator!=(nullptr_t, const function<Result(Args...)>& function) noexcept {return (bool)function;}
+
+template <class Result, class... Args>
+inline 
+void
+swap(function<Result(Args...)>& __x, function<Result(Args...)>& __y) noexcept
+{return __x.swap(__y);}
+
+template <typename T>
+class function;	
+
+template <typename Return, typename... Args>
+class function<Return(Args...)> {
+public:
 
 protected:
+
+private:
 	Return(*_function)(Args...);
-
-private:
-
-public:
-	signature()  { _function = nullptr; }
-	signature(nullptr_type)  { _function = nullptr; }
-	signature(const self_type& other);
-	signature(self_type&& other);
-	~signature() { if (_function) delete _function; }
-
-protected:
-
-private:
-
-};
-
-template <typename Function>
-class function;
-
-template <typename Return, typename... Args>
-class function : public signature<Return, Args...> {
-public:
-	typedef function<Return, Args...> self_type;
-
-protected:
-
-private:
 
 public:
 	function() = default;
-	function(nullptr_type) = default;
+	function(nullptr_type) : _function(nullptr) {}
 	template <typename Function, typename = enable_if_type<is_function<Function>::value>>
 	function(Function f) { _function = f; }
-	function(const self_type&) = default;
-	function(self_type&&) = default;
+	function(const function&) = default;
+	function(function&&) = default;
 	~function() = default;
 
 
 	operator bool() { return (_function == nullptr); }
 
 
-	typename type_traits<Return>::underlying_type operator()(typename type_traits<Args>::universal_type... args) { return _function(forward<typename type_traits<Args>::universal_type>(args)...); }
+	Return operator()(Args&&... args) { return _function(forward<Args&&>(args)...); }
 
 protected:
 

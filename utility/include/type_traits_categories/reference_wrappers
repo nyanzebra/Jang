@@ -1,0 +1,64 @@
+#pragma once
+
+#include "invoke"
+
+#include "../type_categories/result_types"
+
+namespace jang {
+	
+template <typename T>
+struct reference_wrapper : public weak_result_type<T> {
+public:
+  typedef T type;
+protected:
+private:
+    type* _function;
+public:
+  reference_wrapper(type& function) noexcept : _function(addressof(function)) {}
+  reference_wrapper(const reference_wrapper&) = delete;
+  reference_wrapper(reference_wrapper&&) = delete;
+  ~reference_wrapper() = default;
+
+  reference_wrapper& operator=(const reference_wrapper&) = default;
+
+  operator type&() const noexcept { return *_function; }
+  type& get() const noexcept { return *_function; }
+
+  template <typename... Args>
+  typename invoke_of<type&, Args...>::type operator() (Args&&... args) const { return invoke(get(), forward<Args>(args)...); }
+protected:
+private:
+};
+
+namespace implementation {
+
+template <typename T> struct 
+is_reference_wrapper : public false_type {};
+
+template <typename T> struct 
+is_reference_wrapper<reference_wrapper<T> > : public true_type {};
+
+}
+
+template <typename T> 
+struct is_reference_wrapper : public implementation::is_reference_wrapper<remove_const_volatile_type<T>> {};
+
+template <typename T>
+inline reference_wrapper<T> reference(T& type) noexcept { return reference_wrapper<T>(type); }
+
+template <typename T>
+inline reference_wrapper<T> reference(reference_wrapper<T> type) noexcept { return reference(type.get()); }
+
+template <typename T> 
+void reference(const T&&) = delete;
+
+template <typename T>
+inline reference_wrapper<const T> const_reference(const T& type) noexcept { return reference_wrapper<const T>(type); }
+
+template <typename T>
+inline reference_wrapper<const T> const_reference(reference_wrapper<T> type) noexcept { return const_reference(type.get()); }
+
+template <typename T> 
+void const_reference(const T&&) = delete;
+
+}

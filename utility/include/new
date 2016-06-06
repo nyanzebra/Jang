@@ -1,0 +1,170 @@
+#pragma once
+
+#include <stdlib.h>
+
+#include "exception"
+#include "algorithm"
+#include "types"
+
+#ifdef _LIBCPP_NEW
+#undef _LIBCPP_NEW
+#endif
+
+namespace jang {
+
+void_pointer_type align(size_type align, size_type size, void_pointer_type& pointer, size_type& space) noexcept {
+	const unsigned_int_pointer_type unsigned_int_pointer = reinterpret_cast<unsigned_int_pointer_type>(pointer);
+  	const unsigned_int_pointer_type aligned = (unsigned_int_pointer - 1u + align) & -align;
+  	const unsigned_int_pointer_type difference = aligned - unsigned_int_pointer;
+  	if ((size + difference) > space) {
+    	return nullptr;
+	} else {
+      space -= difference;
+      return pointer = reinterpret_cast<void*>(aligned);
+	}
+}
+
+struct bad_alloc : public exception {
+	bad_alloc() throw() : exception("Failure to allocate storage.") {}
+	bad_alloc(const bad_alloc&) = default;
+	bad_alloc(bad_alloc&&) = default;
+	virtual ~bad_alloc() throw() = default;
+
+	bad_alloc& operator=(const bad_alloc&) = default;
+	bad_alloc& operator=(bad_alloc&&) = default;
+};
+
+
+new_handler_type __handler;
+
+new_handler_type set_new_handler(new_handler_type handler) throw() {
+	new_handler_type previous_new_handler;
+
+	__atomic_exchange(&__handler, &handler, &previous_new_handler, __ATOMIC_ACQ_REL);
+
+	return previous_new_handler;
+}
+
+new_handler_type get_new_handler() noexcept {
+	new_handler_type handler;
+
+	__atomic_load(&__handler, &handler, __ATOMIC_ACQUIRE);
+
+	return handler;
+}
+
+enum class memory_leak_enum : char {
+	none,
+	at_least_one,
+	debug_is_off
+};
+//#define SHOULD_FIND_MEMORY_LEAKS
+#if defined(SHOULD_FIND_MEMORY_LEAKS)
+static unsigned int global_memory_allocations_count = 0;
+static void increment_memory_allocations_count() { ++global_memory_allocations_count; }
+static void decrement_memory_allocations_count() { --global_memory_allocations_count; }
+static memory_leak_enum are_there_memory_leaks() { return global_memory_allocations_count ? memory_leak_enum::at_least_one : memory_leak_enum::none; }
+#else
+static void increment_memory_allocations_count() {}
+static void decrement_memory_allocations_count() {}
+static memory_leak_enum are_there_memory_leaks() { return memory_leak_enum::debug_is_off; }
+#endif
+
+//note: write custom operator with defines to simulate new and delete. This allows for standard usage of new and delete and jang version
+
+}
+
+jang::void_pointer_type operator new(jang::size_type size) {
+	
+	jang::void_pointer_type pointer;
+
+	size = size ? size : size + 1;
+
+	while (!(pointer = malloc(size))) {
+		jang::new_handler_type handler = jang::get_new_handler();
+
+		if (!handler) {
+			throw jang::bad_alloc();
+		}
+
+		handler();
+	}
+
+	jang::increment_memory_allocations_count();
+
+	return pointer;
+}
+
+jang::void_pointer_type operator new(jang::size_type size, const jang::no_throw_type& no_throw) noexcept {
+
+	jang::void_pointer_type pointer;
+
+	size = size ? size : size + 1;
+
+	while (!(pointer = malloc(size))) {
+		jang::new_handler_type handler = jang::get_new_handler();
+
+		if (!handler) {
+			return nullptr;
+		}
+
+		try {
+			handler();
+		} catch (const jang::bad_alloc&) {
+			return nullptr;
+		}
+
+		handler();
+	}
+
+	jang::increment_memory_allocations_count();
+
+	return pointer;
+}
+
+namespace jang {
+	void_pointer_type aligned_alloc(size_type alignment, size_type size) {
+		void_pointer_type pointer;
+		int error;
+		error = posix_memalign(&pointer, alignment, size);
+		return (error == 0 ? pointer : nullptr);
+	}
+}
+
+template <typename T>
+jang::void_pointer_type operator new(jang::size_type size, const jang::aligned_type& aligned) { return jang::aligned_alloc(jang::maximum(alignof(jang::pointer_difference_type), alignof(T)), size * sizeof(T)); }
+
+jang::void_pointer_type operator new[](jang::size_type size) {	return ::operator new(size); }	
+
+jang::void_pointer_type operator new[](jang::size_type size, const jang::no_throw_type& no_throw) { return ::operator new(size, no_throw); }
+
+template <typename T>
+jang::void_pointer_type operator new[](jang::size_type size, const jang::aligned_type& aligned) { return ::operator new<T>(size, aligned); }
+
+// void debug_message(const char* file = __FILE__, const int line = __LINE__, const char* function = __func__, jang::stream_type& stream = output_stream) { 
+// 	stream << file << " " << line << ": " << function; 
+// }
+
+void operator delete(jang::void_pointer_type pointer) noexcept { free(pointer); }
+
+void operator delete(jang::void_pointer_type pointer, const jang::no_throw_type& no_throw) noexcept { free(pointer); }	
+
+void operator delete(jang::void_pointer_type pointer, jang::size_type size) noexcept { free(pointer); }
+
+void operator delete(jang::void_pointer_type pointer, const jang::aligned_type& aligned) noexcept { free(pointer); }
+
+void operator delete[](jang::void_pointer_type pointer) noexcept { ::operator delete(pointer); }
+
+void operator delete[](jang::void_pointer_type pointer, const jang::no_throw_type& no_throw) noexcept { ::operator delete(pointer); }
+
+void operator delete[](jang::void_pointer_type pointer, jang::size_type size) noexcept { ::operator delete(pointer); }
+
+void operator delete[](jang::void_pointer_type pointer, const jang::aligned_type& aligned) noexcept { ::operator delete(pointer, aligned); }
+
+namespace jang {
+
+void_pointer_type allocate(size_type size) { return ::operator new(size); }
+
+void deallocate(void_pointer_type pointer) { ::operator delete(pointer); }
+
+}

@@ -1,0 +1,233 @@
+#pragma once
+
+#include "type_traits"
+
+namespace jang {
+
+class exception {
+public:
+protected:
+private:
+	const char* _value;
+public:
+	template <typename T, typename = enable_if_type<is_convertible_value<T, const char*>>>
+	exception(const T&  value) : _value(value) {}
+	template <typename T, typename = enable_if_type<is_convertible_value<T, const char*>>>
+	exception(T&& value) : _value(forward<T>(value)) {}
+	exception(const exception& ex) : _value(ex._value) {}
+	exception(exception&& ex) : _value(move(ex._value)) {}
+	virtual ~exception() throw() {}
+
+	exception& operator=(const exception& ex) {
+		if (this != &ex) {
+			_value = ex._value;
+		}
+		return *this;
+	}
+	exception& operator=(exception&& ex) {
+		if (this != &ex) {
+			_value = move(ex._value);
+		}
+		return *this;
+	}
+
+	const char* what() throw() { return _value;	}
+
+protected:
+private:
+};
+
+class runtime_error : public exception {
+public:
+protected:
+private:
+public:
+	template <typename T>
+	runtime_error(const T& value) : exception(value) {}
+	template <typename T>
+	runtime_error(T&& value) : exception(forward<T>(value)) {}
+	runtime_error(const runtime_error&) = default;
+	runtime_error(runtime_error&&) = default;
+	virtual ~runtime_error() throw() = default;
+
+	runtime_error& operator=(const runtime_error&) = default;
+	runtime_error& operator=(runtime_error&&) = default;
+
+protected:
+private:
+};
+
+class range_error : public runtime_error {
+public:
+protected:
+private:
+public:
+	range_error() : runtime_error("The only library components that throw this exception are wstring_convert::from_bytes and wstring_convert::to_bytes.") {}
+	template <typename T>
+	range_error(const T& value) : runtime_error(value) {}
+	template <typename T>
+	range_error(T&& value) : runtime_error(forward<T>(value)) {}
+	range_error(const range_error&) = default;
+	range_error(range_error&&) = default;
+	virtual ~range_error() throw() = default;
+
+	range_error& operator=(const range_error&) = default;
+	range_error& operator=(range_error&&) = default;
+
+protected:
+
+private:
+
+};
+
+class overflow_error : public runtime_error {
+public:
+protected:
+private:
+public:
+	overflow_error() : runtime_error("The only library components that throw this exception are bitset::to_ulong and bitset::to_ullong.") {}
+	template <typename T>
+	overflow_error(const T& value) : runtime_error(value) {}
+	template <typename T>
+	overflow_error(T&& value) : runtime_error(forward<T>(value)) {}
+	overflow_error(const overflow_error&) = default;
+	overflow_error(overflow_error&&) = default;
+	~overflow_error() throw() = default;
+
+	overflow_error& operator=(const overflow_error&) = default;
+	overflow_error& operator=(overflow_error&&) = default;
+
+protected:
+
+private:
+
+};
+
+class underflow_error : public runtime_error {
+public:
+protected:
+private:
+public:
+	template <typename T>
+	underflow_error(const T& value) : runtime_error(value) {}
+	template <typename T>
+	underflow_error(T&& value) : runtime_error(forward<T>(value)) {}
+	underflow_error(const underflow_error&) = default;
+	underflow_error(underflow_error&&) = default;
+	~underflow_error() throw() = default;
+
+	underflow_error& operator=(const underflow_error&) = default;
+	underflow_error& operator=(underflow_error&&) = default;
+
+protected:
+private:
+};
+
+class logic_error : public exception {
+public:
+protected:
+private:
+public:
+	template <typename T>
+	logic_error(const T& value) : exception(value) {}
+	template <typename T>
+	logic_error(T&& value) : exception(forward<T>(value)) {}
+	logic_error(const logic_error&) = default;
+	logic_error(logic_error&&) = default;
+	virtual ~logic_error() throw() = default;
+
+	logic_error& operator=(const logic_error&) = default;
+	logic_error& operator=(logic_error&&) = default;
+
+protected:
+
+private:
+
+};
+
+class invalid_argument : public logic_error {
+public:
+protected:
+private:
+public:
+	invalid_argument() : logic_error("An argument value has not been accepted.\nThis exception is thrown by bitset::bitset, and the stoi and stof families of functions.") {}
+	template <typename T>
+	invalid_argument(const T& value) : logic_error(value) {}
+	template <typename T>
+	invalid_argument(T&& value) : logic_error(forward<T>(value)) {}
+	invalid_argument(const invalid_argument&) = default;
+	invalid_argument(invalid_argument&&) = default;
+	~invalid_argument() throw() = default;
+
+	invalid_argument& operator=(const invalid_argument&) = default;
+	invalid_argument& operator=(invalid_argument&&) = default;
+
+protected:
+
+private:
+
+};
+
+class length_error : public logic_error {
+public:
+protected:
+private:
+public:
+	length_error() : logic_error("Consequence of attempt to exceed implementation defined length limits for some object.\nThis exception is throw by member functions of basic_string and vector::reserve.") {}
+	template <typename T>
+	length_error(const T& value) : logic_error(value) {}
+	template <typename T>
+	length_error(T&& value) : logic_error(forward<T>(value)) {}
+	length_error(const length_error&) = default;
+	length_error(length_error&&) = default;
+	~length_error() throw() = default;
+
+	length_error& operator=(const length_error&) = default;
+	length_error& operator=(length_error&&) = default;
+
+protected:
+private:
+};
+
+class domain_error : public logic_error {
+public:
+protected:
+private:
+public:
+	template <typename T>
+	domain_error(const T& value) : logic_error(value) {}
+	template <typename T>
+	domain_error(T&& value) : logic_error(forward<T>(value)) {}
+	domain_error(const domain_error&) = default;
+	domain_error(domain_error&&) = default;
+	~domain_error() throw() = default;
+
+	domain_error& operator=(const domain_error&) = default;
+	domain_error& operator=(domain_error&&) = default;
+
+protected:
+private:
+};
+
+class out_of_range : public logic_error {
+public:
+protected:
+private:
+public:
+	out_of_range() : logic_error("Consequence of attempt to access elements out of defined range.\nIt may be thrown by the member functions of bitset and basic_string, by stoi and stod families of functions, and by the bounds-checked member access functions (e.g. vector::at and map::at)") {}
+	template <typename T>
+	out_of_range(const T& value) : logic_error(value) {}
+	template <typename T>
+	out_of_range(T&& value) : logic_error(forward<T>(value)) {}
+	out_of_range(const out_of_range&) = default;
+	out_of_range(out_of_range&&) = default;
+	~out_of_range() throw() = default;
+
+	out_of_range& operator=(const out_of_range&) = default;
+	out_of_range& operator=(out_of_range&&) = default;
+
+protected:
+private:
+};
+
+}

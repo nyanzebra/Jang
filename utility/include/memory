@@ -1,0 +1,164 @@
+#pragma once
+
+#include "type_traits"
+#include "configurator"
+#include "mutex"
+
+namespace jang {
+
+static mutex g_memory_mutex;
+
+class memory {
+public:
+protected:
+private:
+	size_type _available_memory;
+	size_type _used_memory;
+
+public:
+	memory(const memory&) = delete;
+	memory(memory&&) = delete;
+	~memory() = default;
+
+	static memory& instance() {
+		static memory instance;
+		return instance;
+	}
+
+	size_type available() const { return _available_memory; }
+
+	void available(const size_type& value) { _available_memory = value; }
+
+	size_type used() const { return _used_memory; }
+
+	bool claim(const size_type& value) {
+		if (_available_memory < value) {
+			return false;
+		}
+		_used_memory += value;
+		_available_memory -= value;
+		return true;
+	}
+
+protected:
+
+private:
+	memory() = default;
+
+};
+
+template <typename T>
+class weak_ptr {
+public:
+
+protected:
+
+private:
+
+public:
+
+protected:
+
+private:
+
+};
+
+template <typename T>
+class shared_ptr {
+public:
+
+protected:
+
+private:
+
+public:
+
+protected:
+
+private:
+
+};
+
+template <typename T>
+struct default_delete {
+	constexpr default_delete() noexcept = default;
+
+	template <typename U, typename = enable_if_type<is_convertible<U*, T*>::value>>
+	default_delete(const default_delete<U>& d) noexcept {}
+
+	void operator()(T* ptr) const noexcept {
+		static_assert(0 < sizeof(T), "cannot delete an incomplete type");
+		delete ptr;
+	}
+};
+
+template <typename T>
+struct default_delete<T[]> {
+	constexpr default_delete() noexcept = default;
+
+	template <typename U, typename = enable_if_type<is_convertible<U*, T*>::value>>
+	default_delete(const default_delete<U[]>& d) noexcept {}
+
+	template <typename U, typename = enable_if_type<is_convertible<U*, T*>::value>>
+	void operator()(U* ptr) const noexcept {
+		static_assert(sizeof(T) > 0, "default_delete can not delete incomplete type");
+        static_assert(!is_void<T>::value, "default_delete can not delete incomplete type");
+		delete[] ptr;
+	}
+};
+
+template <typename T, typename Deleter = default_delete<T>>
+class unique_ptr {
+public:
+
+protected:
+
+private:
+	T* _ptr;
+	Deleter _d;
+
+public:
+	constexpr unique_ptr();
+	constexpr unique_ptr(nullptr_type);
+	explicit unique_ptr(T* p);
+	template <typename = enable_if_type<!is_reference<Deleter>::value && is_nothrow_copy_constructible<Deleter>::value>>
+	unique_ptr(T* p, const Deleter& d) : _ptr(p), _d(d) {}
+	//unique_ptr(T* p) : unique_ptr(p, Deleter()) {}
+	unique_ptr(unique_ptr&& other) : _ptr(move(other._ptr)) {}
+	template <typename U, typename E>
+	explicit unique_ptr(U p);
+
+protected:
+
+private:
+
+};
+
+// template <typename T, typename Deleter>
+// class unique_ptr<T[], Deleter> {
+// public:
+
+// protected:
+
+// private:
+
+// public:
+// 	constexpr unique_ptr();
+// 	constexpr unique_ptr(nullptr_type);
+// 	template <typename U>
+// 	explicit unique_ptr(U p);
+// 	template <typename U>
+// 	explicit unique_ptr(U p);
+// 	template <typename U>
+// 	explicit unique_ptr(U p);
+// 	unique_ptr(unique_ptr&& other) : _ptr(move(other._ptr)) {}
+// 	template <typename U>
+// 	explicit unique_ptr(U p);
+
+// protected:
+
+// private:
+
+// };
+
+}

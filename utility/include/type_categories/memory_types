@@ -1,0 +1,12 @@
+#pragma once
+
+namespace jang {
+
+constexpr unsigned long long int operator"" _bytes_type(unsigned long long int size) { return size; }
+constexpr unsigned long long int operator"" _kilobytes_type(unsigned long long int size) { return size * 1024_bytes_type; }
+constexpr unsigned long long int operator"" _megabytes_type(unsigned long long int size) { return size * 1024_kilobytes_type; }
+constexpr unsigned long long int operator"" _gigabytes_type(unsigned long long int size) { return size * 1024_megabytes_type; }
+constexpr unsigned long long int operator"" _terabytes_type(unsigned long long int size) { return size * 1024_gigabytes_type; }
+constexpr unsigned long long int operator"" _petabytes_type(unsigned long long int size) { return size * 1024_terabytes_type; }
+
+}

@@ -1,0 +1,32 @@
+#pragma once
+
+#include "vertex"
+#include "../type_traits"
+
+namespace jang {
+	
+template <typename T, typename W>
+class edge {
+public:
+	typedef T type;
+protected:
+private:
+	vertex<T>* _left, _right;
+	W _weight;
+public:
+	template <typename X, typename Y, typename Z, typename = enable_if_type<is_assignable_value<vertex<T>, X> && is_assignable_value<vertex<T>, Y> && is_assignable_value<W, Z>>>
+	edge(X&& left, Y&& right, Z&& weight = 0) : _left(forward<X>(left)), _right(forward<Y>(right)), _weight(forward<Z>(weight)) {}
+	edge(const edge&) = default;
+	edge(edge&&) = default;
+	~edge() = default;
+
+	edge& operator=(const edge& other) { _left = other._left; _right = other._right; _weight = other._weight; }
+	edge& operator=(edge&& other) { _left = move(other._left); _right = move(other._right); _weight = move(other._weight); }
+
+
+
+protected:
+private:
+};
+
+}

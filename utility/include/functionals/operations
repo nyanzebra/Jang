@@ -1,0 +1,211 @@
+#pragma once
+
+#include "functional_base"
+#include "../maths"
+
+
+namespace jang {
+
+template <typename T = void>
+struct plus_functor { T operator()(const T& x, const T& y) const { return add(x, y); } };
+
+template <>
+struct plus_functor<void> {
+    template <typename T, typename U>
+    auto operator()(T&& x, U&& y) const noexcept(noexcept(add(forward(x), forward(y)))) -> decltype(add(forward(x), forward(y))) { return add(forward(x), forward(y)); }
+    typedef void is_transparent;
+};
+
+template <typename T = void>
+struct minus_functor { T operator()(const T& x, const T& y) const { return subtract(x, y); } };
+
+template <>
+struct minus_functor<void> {
+    template <typename T, typename U>
+    auto operator()(T&& x, U&& y) const noexcept(noexcept(subtract(forward(x), forward(y)))) -> decltype(subtract(forward(x), forward(y))) { return forward(x) - forward(y); }
+    typedef void is_transparent;
+};
+
+template <typename T = void>
+struct multiplies_functor { T operator()(const T& x, const T& y) const { return multiply(x, y); } };
+
+template <>
+struct multiplies_functor<void> {
+    template <typename T, typename U>
+    auto operator()(T&& x, U&& y) const noexcept(noexcept(multiply(forward(x), forward(y)))) -> decltype(multiply(forward(x), forward(y))) { return multiply(forward(x), forward(y)); }
+    typedef void is_transparent;
+};
+
+template <typename T = void>
+struct divides_functor { T operator()(const T& x, const T& y) const { return divide(x, y); } };
+
+template <>
+struct divides_functor<void> {
+    template <typename T, typename U>
+    auto operator()(T&& x, U&& y) const noexcept(noexcept(divide(forward(x), forward(y)))) -> decltype(divide(forward(x), forward(y))) { return divide(forward(x), forward(y)); }
+    typedef void is_transparent;
+};
+
+template <typename T = void>
+struct modulus_functor { T operator()(const T& x, const T& y) const { return modulo(x, y); } };
+
+template <>
+struct modulus_functor<void> {
+    template <typename T, typename U>
+    auto operator()(T&& x, U&& y) const noexcept(noexcept(modulo(forward(x), forward(y)))) -> decltype(modulo(forward(x), forward(y))) { return modulo(forward(x), forward(y)); }
+    typedef void is_transparent;
+};
+
+template <typename T = void>
+struct negate_functor { T operator()(const T& x) const { return -x; } };
+
+template <>
+struct negate_functor<void> {
+    template <typename T>
+    auto operator()(T&& x) const noexcept(noexcept(- forward(x))) -> decltype(-forward(x)) { return - forward(x); }
+    typedef void is_transparent;
+};
+
+template <typename T = void>
+struct equal_to_functor { bool operator()(const T& x, const T& y) const { return x == y; } };
+
+template <>
+struct equal_to_functor<void> {
+    template <typename T, typename U>   
+    auto operator()(T&& x, U&& y) const noexcept(noexcept(forward(x) == forward(y))) -> decltype(forward(x) == forward(y)) { return forward(x) == forward(y); }
+    typedef void is_transparent;
+};
+
+template <typename T = void>
+struct not_equal_to_functor { bool operator()(const T& x, const T& y) const { return x != y; } };
+
+template <>
+struct not_equal_to_functor<void> {
+    template <typename T, typename U>
+    auto operator()(T&& x, U&& y) const noexcept(noexcept(forward(x) != forward(y))) -> decltype(forward(x) != forward(y)) { return forward(x) != forward(y); }
+    typedef void is_transparent;
+};
+
+template <typename T = void>
+struct greater_functor { bool operator()(const T& x, const T& y) const { return x > y; } };
+
+template <>
+struct greater_functor<void> {
+    template <typename T, typename U>
+    auto operator()(T&& x, U&& y) const noexcept(noexcept(forward(x) > forward(y))) -> decltype(forward(x) > forward(y)) { return forward(x) > forward(y); }
+    typedef void is_transparent;
+};
+
+template <typename T>
+class less_functor { bool operator()(const T& x, const T& y) const { return x < y; } };
+
+template <>
+class less_functor<void> {
+	template <typename T, typename U>
+	auto operator()(T&& x, U&& y) const noexcept(noexcept(forward(x) < forward(y))) -> decltype(forward(x) < forward(y)) { return forward(x) < forward(y); }
+  	typedef void is_transparent;
+};
+
+template <typename T = void>
+struct greater_equal_functor { bool operator()(const T& x, const T& y) const { return x >= y; } };
+
+template <>
+struct greater_equal_functor<void> {
+    template <typename T, typename U>
+    auto operator()(T&& x, U&& y) const noexcept(noexcept(forward(x) >= forward(y))) -> decltype(forward(x) >= forward(y)) { return forward(x) >= forward(y); }
+    typedef void is_transparent;
+};
+
+template <typename T = void>
+struct less_equal_functor { bool operator()(const T& x, const T& y) const { return x <= y; } };
+
+template <>
+struct less_equal_functor<void> {
+    template <typename T, typename U>
+    auto operator()(T&& x, U&& y) const noexcept(noexcept(forward(x) <= forward(y))) -> decltype(forward(x) <= forward(y)) { return forward(x) <= forward(y); }
+    typedef void is_transparent;
+};
+
+template <typename T = void>
+struct logical_and_functor { bool operator()(const T& x, const T& y) const { return x && y; } };
+
+template <>
+struct logical_and_functor<void> {
+    template <typename T, typename U>
+    auto operator()(T&& x, U&& y) const noexcept(noexcept(forward(x) && forward(y))) -> decltype(forward(x) && forward(y)) { return forward(x) && forward(y); }
+    typedef void is_transparent;
+};
+
+template <typename T = void>
+struct logical_or_functor { bool operator()(const T& x, const T& y) const { return x || y; } };
+
+template <>
+struct logical_or_functor<void> {
+    template <typename T, typename U>
+    auto operator()(T&& x, U&& y) const noexcept(noexcept(forward(x) || forward(y))) -> decltype(forward(x) || forward(y)) { return forward(x) || forward(y); }
+    typedef void is_transparent;
+};
+
+
+template <typename T = void>
+struct logical_not_functor { bool operator()(const T& x) const { return !x; } };
+
+template <>
+struct logical_not_functor<void> {
+    template <typename T>
+    auto operator()(T&& x) const noexcept(noexcept(!forward(x))) -> decltype(!forward(x)) { return !forward(x); }
+    typedef void is_transparent;
+};
+
+template <typename T = void>
+struct bit_and_functor { T operator()(const T& x, const T& y) const { return x & y; } };
+
+template <>
+struct bit_and_functor<void> {
+    template <typename T, typename U>
+    auto operator()(T&& x, U&& y) const noexcept(noexcept(forward(x) & forward(y))) -> decltype(forward(x) & forward(y)) { return forward(x) & forward(y); }
+    typedef void is_transparent;
+};
+
+template <typename T = void>
+struct bit_or_functor { T operator()(const T& x, const T& y) const { return x | y; } };
+
+template <>
+struct bit_or_functor<void> {
+    template <typename T, typename U>
+    auto operator()(T&& x, U&& y) const noexcept(noexcept(forward(x) | forward(y))) -> decltype(forward(x) | forward(y)) { return forward(x) | forward(y); }
+    typedef void is_transparent;
+};
+
+template <typename T = void>
+struct bit_xor_functor { T operator()(const T& x, const T& y) const { return x ^ y; } };
+
+template <>
+struct bit_xor_functor<void> {
+    template <typename T, typename U>
+    auto operator()(T&& x, U&& y) const noexcept(noexcept(forward(x) ^ forward(y))) -> decltype(forward(x) ^ forward(y)) { return forward(x) ^ forward(y); }
+    typedef void is_transparent;
+};
+
+template <typename T = void>
+struct bit_not_functor { T operator()(const T& x) const { return ~x; } };
+
+template <>
+struct bit_not_functor<void> {
+    template <typename T>
+    auto operator()(T&& x) const noexcept(noexcept(~forward(x))) -> decltype(~forward(x)) { return ~forward(x); }
+    typedef void is_transparent;
+};
+
+// template <typename Function>
+// struct not_function {
+// public:
+// protected:
+// private:
+// public:
+//     explicit
+// protected:
+// private:
+// }
+
+}

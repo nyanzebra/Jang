@@ -1,0 +1,77 @@
+#pragma once 
+
+#include "../../allocator"
+
+namespace jang {
+
+template <typename T, size_type Capacity, size_type GrowthFactor>
+class contiguous_sequence {
+public:
+	typedef T type;
+	typedef type iterable_type;
+protected:
+	size_type _capacity, _growth_factor;
+private:
+public:
+	contiguous_sequence() : _capacity(Capacity), _growth_factor(GrowthFactor) {}
+	contiguous_sequence(const contiguous_sequence&) = default;
+	contiguous_sequence(contiguous_sequence&&) = default;
+	~contiguous_sequence() = default;
+
+	contiguous_sequence& operator=(const contiguous_sequence&) = default;
+	contiguous_sequence& operator=(contiguous_sequence&&) = default;
+
+	template <typename Allocator>
+	void grow(Allocator& allocator, T** pointer, const size_type& size, const size_type& future_size) {
+		if (future_size > _capacity) {
+			T* temp = allocator.allocate(_capacity * _growth_factor);
+			copy(*pointer, *pointer + size, temp);
+			allocator.deallocate(*pointer, _capacity);
+			*pointer = temp;
+			_capacity *= _growth_factor;
+		}
+	}
+
+	template <typename Allocator>
+	void grow(Allocator& allocator, T** pointer, const size_type& size, size_type&& future_size) {
+		if (move(future_size) > _capacity) {
+			T* temp = allocator.allocate(_capacity * _growth_factor);
+			copy(*pointer, *pointer + size, temp);
+			allocator.deallocate(*pointer, _capacity);
+			*pointer = temp;
+			_capacity *= _growth_factor;
+		}
+	}
+
+	template <typename Allocator>
+	void resize(Allocator& allocator, T** pointer, const size_type& new_capacity) {
+		if (_capacity == new_capacity) {
+			return;
+		} 
+
+		T* temp = allocator.allocate(new_capacity);
+		
+		copy(*pointer, *pointer + (_capacity < new_capacity ? _capacity : new_capacity), temp);
+		allocator.deallocate(*pointer, _capacity);
+		*pointer = temp;
+		_capacity = new_capacity;
+	}
+
+	template <typename Allocator>
+	void resize(Allocator& allocator, T** pointer, size_type&& new_capacity) {
+		if (_capacity == new_capacity) {
+			return;
+		} 
+
+		T* temp = allocator.allocate(new_capacity);
+		
+		copy(*pointer, *pointer + (_capacity < new_capacity ? _capacity : new_capacity), temp);
+		allocator.deallocate(*pointer, _capacity);
+		*pointer = temp;
+		_capacity = new_capacity;
+	}
+protected:
+private:
+};
+
+}

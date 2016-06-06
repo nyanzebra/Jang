@@ -1,1 +1,36 @@
-# FTLGameEngine
+# Jang
+
+## Goals
+- [ ] networking setup (udp and tcp)
+- [ ] graphics (textures, shaders, algorithms, windows, scenes, meshes, models, rays, simplex clouds, renderers, cameras, etc)
+- [ ] container base
+- [ ] policy allocators
+- [ ] configuration options
+- [ ] logging (both locally and on hosted network)
+- [ ] filesystem (able to manage all that will be in c++17)
+- [ ] memory management tracker
+- [ ] extended types and definitions
+- [ ] more containers (trie, graph, skip list, JSON, LRU cache, other trees..., etc)
+- [ ] file class to access c-style file modifiers
+- [ ] stream base that leads to networking as well
+- [ ] audio (basic consumption of audio resource played on separate thread)
+- [ ] test framework
+- [ ] console wrapper
+- [ ] pattern stubs (observer, factory, etc...)
+- [ ] more exceptions
+- [ ] clear naming
+- [ ] more math (calculus)
+- [ ] basic emulator parts (accumulator, registers, pipeline, assembly parsing)
+- [ ] more algorithms
+- [ ] more parallelism
+- [ ] more type traits
+- [ ] lisp compiler?
+- [ ] u8 support strings?
+- [ ] c++17 features
+- [ ] more sensical placements of classes and functions
+- [ ] AI?
+- [ ] machine learning?
+- [ ] event system
+- [ ] shapes
+- [ ] debug?
+- [ ] replace GLM

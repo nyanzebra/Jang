@@ -1,34 +1,34 @@
 #pragma once
 
 #include "string"
-#include <memory>
-#include <mutex>
+#include "memory"
+#include "mutex"
 #include "vector"	
 
 #include "console"
 #include "types"
+#include "type_traits"
 
 namespace jang {
-namespace io {
 
 template <typename T = char>
 class file {
 public:
 	enum class mode : char {
-		kREAD = 0x1,
-		kWRITE = 0x2,
-		kAPPEND = 0x3,
-		kUPDATE = 0x4,
-		kBINARY = 0x8
+		read = 0x1,
+		write = 0x2,
+		append = 0x3,
+		update = 0x4,
+		binary = 0x8
 	};
 
 	file() = default;
-	template <typename T, typename = std::enable_if_type<std::is_convertible<T, jang::string>::value>>
-	file(const T& filename, const mode mode = mode::kREAD) : _filename(filename) { open(mode); }
-	template <typename T, typename = std::enable_if_type<std::is_convertible<T, jang::string>::value>>
-	file(T&& filename, const mode mode = mode::kREAD) : _filename(std::move(filename)) { open(mode); }
+	template <typename T, typename = enable_if_type<is_convertible<T, jang::string>::value>>
+	file(const T& filename, const mode mode = mode::read) : _filename(filename) { open(mode); }
+	template <typename T, typename = enable_if_type<is_convertible<T, jang::string>::value>>
+	file(T&& filename, const mode mode = mode::read) : _filename(move(filename)) { open(mode); }
 	file(const file& file) : _filename(file._filename), _file(file._file), _is_open(file._is_open) {}
-	file(file&& file) : _filename(std::move(file._filename)), _file(std::move(file._file)), _is_open(std::move(file._is_open)) {}
+	file(file&& file) : _filename(move(file._filename)), _file(move(file._file)), _is_open(move(file._is_open)) {}
 	virtual ~file() { close(); };
 
 	file& operator=(const file&) = default;
@@ -54,7 +54,7 @@ private:
 	}
 
 	const bool _open(const mode mode, const jang::string& filename = "") {
-		std::lock_guard<std::mutex> lock(_file_lock);
+		lock_guard<mutex> lock(_file_lock);
 		try {
 			if (filename.compare("") != 0) {
 				_filename = filename;
@@ -69,7 +69,7 @@ private:
 				case mode::kWRITE:
 					access = "w";
 					break;
-				case mode::kREAD:
+				case mode::read:
 				default:
 					access = "r";
 					break;
@@ -97,7 +97,7 @@ private:
 				_is_open = true;
 				return true;
 			}
-		} catch (std::runtime_error& err) {
+		} catch (runtime_error& err) {
 			_force_close();
 			console::output_error(RED, WHITE, err.what());
 			return false;
@@ -108,13 +108,13 @@ private:
 
 	template <typename It>
 	void _write(It begin, It end) {
-		std::lock_guard<std::mutex> lock(_file_lock);
+		lock_guard<mutex> lock(_file_lock);
 
 		try {
 			if (_is_open && begin < end) {
-				fwrite(&(*begin), sizeof(typename std::iterator_traits<It>::value_type), std::distance(begin, end), _file);
+				fwrite(&(*begin), sizeof(typename iterator_traits<It>::value_type), distance(begin, end), _file);
 			}
-		} catch (std::runtime_error& err) {
+		} catch (runtime_error& err) {
 			_force_close();
 			console::output_error(RED, WHITE, err.what());
 		}
@@ -122,9 +122,9 @@ private:
 
 	template <typename It>
 	void _read(It begin, It end, size_type offset) {
-		std::lock_guard<std::mutex> lock(_file_lock);
+		lock_guard<mutex> lock(_file_lock);
 
-		typedef typename std::iterator_traits<It>::value_type value_type;
+		typedef typename iterator_traits<It>::value_type value_type;
 
 		try {
 			if (_is_open) {
@@ -136,10 +136,10 @@ private:
 				}
 				if (_file) {
 					fseek(_file, offset * sizeof(value_type), SEEK_SET);
-					fread(&(*begin), sizeof(value_type), std::distance(begin, end), _file);
+					fread(&(*begin), sizeof(value_type), distance(begin, end), _file);
 				}
 			}
-		} catch (std::runtime_error& err) {
+		} catch (runtime_error& err) {
 			_force_close();
 			console::output_line(RED, WHITE, err.what());
 		}
@@ -156,10 +156,9 @@ protected:
 	jang::string _filename;
 
 private:
-	std::mutex _file_lock;
+	mutex _file_lock;
 	bool _is_open = false;
 	FILE* _file;
 };
 
-} // io
-} // ftl
+}

@@ -1,0 +1,41 @@
+#pragma once
+
+#include "type_traits"
+#include "utility"
+
+namespace jang {
+
+template <typename T, typename = enable_if_type<is_arithmetic_value<T>>>
+struct variable {
+public:
+protected:
+private:
+	T _multiplier;
+	T _power;
+
+public:
+	variable() = default;
+	variable(const T& multiplier = T(1), const T& power = T(1)) : _multiplier(multiplier), _power(power) {}
+	variable(T&& multiplier = T(1), T&& power = T(1)) : _multiplier(move(multiplier)), _power(move(power)) {}
+	variable(const variable&) = default;
+	variable(variable&&) = default;
+	~variable() = default;
+
+	variable& operator=(const variable&) = default;
+
+	void derivate() {/*bring to lower order*/_multiplier *= _power; _power--; }
+
+	void integrate() {/*bring to higher order*/_multiplier /= _power; _power++; }
+
+	T operator()(const T& value) const { return power(value, _power) * _multiplier; }
+	T operator()(T&& value) const { return power(move(value), _power) * _multiplier; }
+	T operator()(const T& a, const T& b) const { return operator()(b) - operator()(a); }
+	T operator()(T&& a, T&& b) const { return operator()(forward<T>(b)) - operator()(forward<T>(a)); }
+
+
+
+protected:
+private:
+};
+	
+}

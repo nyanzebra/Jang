@@ -1,7 +1,7 @@
 #pragma once
 
 #include "string"
-#include <iostream>
+#include "iostream"
 
 #if defined(_WIN32) || defined(_WIN64)
 
@@ -54,39 +54,38 @@
 #endif
 
 namespace jang {
-namespace io {
 
 class console {
 public:
-	static void print_working_directory() { _output(std::cout, BLACK, WHITE, _current_working_directory()); }
+	static void print_working_directory() { _output(cout, BLACK, WHITE, _current_working_directory()); }
 
 
 
 	template <typename T, typename... U>
-	static void output(const size_t& foreground_color, const size_t& background_color, T&& arg, U&&... args) { _output(std::cout, foreground_color, background_color, std::forward<T>(arg), std::forward<U>(args)...); }
+	static void output(const size_t& foreground_color, const size_t& background_color, T&& arg, U&&... args) { _output(cout, foreground_color, background_color, forward<T>(arg), forward<U>(args)...); }
 
 	template <typename T, typename... U>
-	static void output(const size_t& foreground_color, const size_t& background_color, const T& arg, const U&... args) { _output(std::cout, foreground_color, background_color, arg, args...); }
+	static void output(const size_t& foreground_color, const size_t& background_color, const T& arg, const U&... args) { _output(cout, foreground_color, background_color, arg, args...); }
 
 	template <typename T, typename... U>
-	static void output_error(const size_t& foreground_color, const size_t& background_color, T&& arg, U&&... args) { _output(std::cerr, foreground_color, background_color, std::forward<T>(arg), std::forward<U>(args)...); }
+	static void output_error(const size_t& foreground_color, const size_t& background_color, T&& arg, U&&... args) { _output(cerr, foreground_color, background_color, forward<T>(arg), forward<U>(args)...); }
 
 	template <typename T, typename... U>
-	static void output_error(const size_t& foreground_color, const size_t& background_color, const T& arg, const U&... args) { _output(std::cerr, foreground_color, background_color, arg, args...); }
+	static void output_error(const size_t& foreground_color, const size_t& background_color, const T& arg, const U&... args) { _output(cerr, foreground_color, background_color, arg, args...); }
 
 	template <typename T, typename... U>
-	static void output_log(const size_t& foreground_color, const size_t& background_color, T&& arg, U&&... args) { _output(std::clog, foreground_color, background_color, std::forward<T>(arg), std::forward<U>(args)...); }
+	static void output_log(const size_t& foreground_color, const size_t& background_color, T&& arg, U&&... args) { _output(clog, foreground_color, background_color, forward<T>(arg), forward<U>(args)...); }
 
 	template <typename T, typename... U>
-	static void output_log(const size_t& foreground_color, const size_t& background_color, const T& arg, const U&... args) { _output(std::clog, foreground_color, background_color, arg, args...); }
+	static void output_log(const size_t& foreground_color, const size_t& background_color, const T& arg, const U&... args) { _output(clog, foreground_color, background_color, arg, args...); }
 
 	template <typename T, typename... U>
-	static void output_line(const size_t& foreground_color, const size_t& background_color, T&& arg, U&&... args) { _output(std::cout, foreground_color, background_color, std::forward<T>(arg), std::forward<U>(args)...); std::cout << std::endl; }
+	static void output_line(const size_t& foreground_color, const size_t& background_color, T&& arg, U&&... args) { _output(cout, foreground_color, background_color, forward<T>(arg), forward<U>(args)...); cout << endl; }
 
 	template <typename T, typename... U>
-	static void output_line(const size_t& foreground_color, const size_t& background_color, const T& arg, const U&... args) { _output(std::cout, foreground_color, background_color, arg, args...); std::cout << std::endl; }
+	static void output_line(const size_t& foreground_color, const size_t& background_color, const T& arg, const U&... args) { _output(cout, foreground_color, background_color, arg, args...); cout << endl; }
 
-	static void output_line() { std::cout << std::endl; }
+	static void output_line() { cout << endl; }
 
 	/*template <typename T, typename... U>
 	static void operator<<(T&& arg, U&&... args) {}*/
@@ -106,36 +105,36 @@ private:
 #ifdef _WIN32
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), (WORD)foreground_color | (WORD)AS_BACKGROUND(background_color));
 #else
-		std::cout << "\033[0;" << foreground_color << "m";
-		std::cout << "\033[7;" << background_color << "m";
+		cout << "\033[0;" << foreground_color << "m";
+		cout << "\033[7;" << background_color << "m";
 #endif
 	}
 
 	template <typename T>
-	static void _input(T& arg) { std::cout << "> "; std::cin >> arg; }
+	static void _input(T& arg) { cout << "> "; cin >> arg; }
 
 	template <typename T>
-	static void _output(std::ostream& stream, const size_t& foreground_color, const size_t& background_color, T&& arg) {
+	static void _output(ostream& stream, const size_t& foreground_color, const size_t& background_color, T&& arg) {
 		_color(foreground_color, background_color);
-		stream << std::forward<T>(arg);
+		stream << forward<T>(arg);
 	}
 
 	template <typename T>
-	static void _output(std::ostream& stream, const size_t& foreground_color, const size_t& background_color, const T& arg) {
+	static void _output(ostream& stream, const size_t& foreground_color, const size_t& background_color, const T& arg) {
 		_color(foreground_color, background_color);
 		stream << arg;
 	}
 
 	template <typename T, typename... U>
-	static void _output(std::ostream& stream, const size_t& foreground_color, const size_t& background_color, T&& arg, U&&... args) {
+	static void _output(ostream& stream, const size_t& foreground_color, const size_t& background_color, T&& arg, U&&... args) {
 		_output(stream, foreground_color, background_color, arg);
 		if (sizeof...(args)) {
-			_output(stream, foreground_color, background_color, std::forward<U>(args)...);
+			_output(stream, foreground_color, background_color, forward<U>(args)...);
 		}
 	}
 
 	template <typename T, typename... U>
-	static void _output(std::ostream& stream, const size_t& foreground_color, const size_t& background_color, const T& arg, const U&... args) {
+	static void _output(ostream& stream, const size_t& foreground_color, const size_t& background_color, const T& arg, const U&... args) {
 		_output(stream, foreground_color, background_color, arg);
 		if (sizeof...(args)) {
 			_output(stream, foreground_color, background_color, args...);
@@ -143,5 +142,4 @@ private:
 	}
 	};
 
-} // io
 } // ftl

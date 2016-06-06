@@ -1,7 +1,7 @@
 #pragma once
 
-#include "test.h"
-#include "io/configurator.h"
+#include "utility/test.h"
+#include "utility/io/configurator.h"
 
 TEST_SUITE(configuration) {
 	TEST(load_json) {

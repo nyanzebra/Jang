@@ -1,0 +1,48 @@
+#pragma once
+
+#include "references"
+#include "composite_type_categories"
+
+namespace jang {
+	
+template <typename T>
+struct remove_pointer { typedef T type; };
+
+template <typename T>
+struct remove_pointer<T*> { typedef T type; };
+
+template <typename T>
+struct remove_pointer<T* const> { typedef T type; };
+
+template <typename T>
+struct remove_pointer<T* volatile> { typedef T type; };
+
+template <typename T>
+struct remove_pointer<T* const volatile> { typedef T type; };
+
+template <typename T>
+using remove_pointer_type = typename remove_pointer<T>::type;
+
+namespace implementation {
+
+template <typename T, bool is_function_type = false>
+struct add_pointer { typedef typename remove_reference<T>::type* type; };
+
+template <typename T>
+struct add_pointer<T, true> { typedef T type; };
+
+template <typename T, typename... Args>
+struct add_pointer<T(Args...), true> { using type = T(*)(Args...); };
+
+template <typename T, typename... Args>
+struct add_pointer<T(Args..., ...), true> { using type = T(*)(Args..., ...); };
+
+}
+
+template <typename T>
+struct add_pointer : public implementation::add_pointer<T, is_function_value<T>> {};
+
+template <typename T>
+using add_pointer_type = typename add_pointer<T>::type;
+
+}

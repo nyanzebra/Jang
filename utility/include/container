@@ -3,72 +3,478 @@
 #include "iterator"	
 #include "exception"
 #include "utility"
-#include "functional"
+//#include "functional"
 #include "allocator"
-#include "generic_type_cast"
+//#include "memory"
+#include "type_traits"
+//#include "mutex"
+#include "initializer_list"
+#include "algorithm"
+#include "sort"
+
+#include <iostream>
 
 namespace jang {
 
-template <typename Iterator, typename Allocator = memory::allocator<typename iterator_traits<Iterator>::type>, typename = enable_if_type<is_iterator<Iterator>::value>>
-class container : public generic_type_cast {
+template <typename T, typename AllocatorPolicy = standard_based_allocator_policy<T>>
+class container {
 public:
-
-	typedef container<Iterator> self_type;
-	typedef Iterator iterator_type;
-	typedef Allocator allocator_type;
-	typedef typename Iterator::underlying_type underlying_type;
-
+	typedef allocator<T, AllocatorPolicy> allocator_type;
 protected:
-
-	underlying_type* _ptr;
-	iterator_type _begin = iterator_type(_ptr);
 	size_type _size;
 	allocator_type _allocator;
-
 private:
-
 public:
 	container() : container(allocator_type()) {}
-	explicit container(allocator_type alloc) : _size(0), _ptr(nullptr), _allocator(alloc) {}
-	container(size_type size, underlying_type* ptr, allocator_type alloc = allocator_type()) : container(alloc), _size(size), _ptr(ptr) {}
-	container(const self_type& other) : _size(other._size), _ptr(other._ptr), _allocator(other._allocator) {}
-	container(self_type&& other) : _size(move(other._size)), _ptr(move(other._ptr)), _allocator(move(other._allocator)) {}
-	virtual ~container() { if (_ptr) delete _ptr; }
+	explicit container(allocator_type allocator) : _size(0), _allocator(allocator) {}
+	container(size_type size, allocator_type allocator = allocator_type()) : _allocator(allocator), _size(size) {}
+	container(const container& other) : _size(other._size), _allocator(other._allocator) {}
+	container(container&& other) : _size(move(other._size)), _allocator(move(other._allocator)) {}
+	template <typename ForwardIterator>
+	container(ForwardIterator first, ForwardIterator last, const allocator_type allocator = allocator_type()) {}
+	container(initializer_list<T> init, const allocator_type& allocator = allocator_type()) : container(init.begin(), init.end(), allocator) {}
+	virtual ~container() = default;
 
+	virtual container& operator=(const container& other) { 
+		if (this != &other) {
+			_size = other._size; 
+		}
 
-	iterator_type& begin() { return _begin; }
-	iterator_type& end() { return (_begin + _size); }
-	const iterator_type& cbegin() { return _begin; }
-	const iterator_type& cend() { return (_being + _size); }
+		return *this; 
+	}
+	virtual container& operator=(container&& other) { 
+		if (this != &other) {
+			_size = move(other._size); 
+		}
 
+		return *this;
+	}
 
-	virtual self_type& operator=(const self_type& other) { _allocator = other._size = other.size(); _ptr = other._ptr; }
+	constexpr const size_type& size() const { return _size; }
 
+	constexpr const bool empty() const { return _size == 0; }
+
+	constexpr const size_type max_size() const { return 0; }
 
 	allocator_type& allocator() { return _allocator; }
-
-
-	size_type size() const { return _size; }
-
-
-	bool is_empty() const { return _size == 0; }
-
-
-	size_type max_size() { function<size_type(int)> f = [](int x) { return x; }  return f(0); }
-
-
-	friend void swap(self_type& lhs, self_type& rhs) { auto temp = lhs; rhs = lhs; rhs = temp; }
-
 protected:
-
-	template <typename T, typename = enable_if_type<is_base_of<self_type, T>::value>>
-	virtual T _get(T*) const override { return T(begin(), end()); }
-
-	template <typename T, typename = enable_if_type<is_base_of<self_type, T>::value>>
-	virtual T _get_ptr() const override { return nullptr; }
-
 private:
+};
 
+template <typename T, size_type N>
+class fixed_length_container : public container<T, dummy_allocator_policy<T>> {
+public:
+	typedef allocator<T, dummy_allocator_policy<T>> allocator_type;
+	typedef random_access_iterator<T> iterator_type;
+	typedef random_access_iterator<const T> const_iterator_type;
+protected:
+private:
+	T _pointer[N];
+
+	typedef container<T, dummy_allocator_policy<T>> container_type;
+	using container_type::_size;
+	using container_type::_allocator;
+public:
+	fixed_length_container() : container_type(N, allocator_type()) {}
+	fixed_length_container(const fixed_length_container& other) : container_type(other._size), _pointer(_pointer) {}
+	fixed_length_container(fixed_length_container&& other) : container_type(move(other._size)), _pointer(move(_pointer)) {}
+	template <typename ForwardIterator>
+	fixed_length_container(ForwardIterator first, ForwardIterator last) : container_type(N) {
+		if (distance(first, last) > N) {
+			throw out_of_range();
+		}
+	 	move(first, last, begin()); 
+	}
+	fixed_length_container(initializer_list<T> init) : fixed_length_container(init.begin(), init.end()) {}
+	~fixed_length_container() = default;
+	
+	fixed_length_container& operator=(initializer_list<T> init) { return operator=(move(fixed_length_container(init))); }
+	fixed_length_container& operator=(const fixed_length_container& other) { 
+		if (this != &other) {
+			_allocator = other._allocator; 
+			_size = other._size;
+			copy(other.begin(), other.end(), begin()); 
+		}
+		return *this; 
+	}
+	fixed_length_container& operator=(fixed_length_container&& other) { 
+		if (this != &other) {
+			_allocator = move(other._allocator); 
+			_size = move(other._size); 
+			move(other.begin(), other.end(), begin());
+		}
+		return *this;
+	}
+
+	constexpr iterator_type begin() { return iterator_type(_pointer); }
+	constexpr iterator_type end() { return iterator_type(_pointer + _size); }
+	constexpr const_iterator_type const_begin() const { return const_iterator_type(_pointer); }
+	constexpr const_iterator_type const_end() const { return const_iterator_type(_pointer + _size); }
+
+	constexpr T& front() { return *begin(); }
+	constexpr const T& front() const { return *const_begin(); }
+	constexpr T& back() { return *(--end()); }
+	constexpr const T& back() const { return *(--const_end()); }
+
+	T& at(const size_type& index) {
+		if (index >= _size) {
+			throw out_of_range();
+		}
+		return operator[](index);
+	}
+	const T& at(const size_type& index) const {
+		if (index >= _size) {
+			throw out_of_range();
+		}
+
+		return operator[](index);
+	}
+	T& at(size_type&& index) {
+		if (index >= _size) {
+			throw out_of_range();
+		}
+
+		return operator[](move(index));
+	}
+	const T& at(size_type&& index) const {
+		if (index >= _size) {
+			throw out_of_range();
+		}
+
+		return operator[](move(index));
+	}
+
+	T& operator[](const size_type& index) { return *(begin() + index); }
+	const T& operator[](const size_type& index) const { return *(const_begin() + index); }
+	T& operator[](size_type&& index) { return *(begin() + move(index)); }
+	const T& operator[](size_type&& index) const { return *(const_begin() + move(index)); }
+
+	const bool operator==(const fixed_length_container& other) {
+		if (other._size == _size) {
+			for (size_type i = 0; i < _size; ++i) {
+				if (other[i] != operator[](i)) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+	const bool operator==(fixed_length_container&& other) {
+		if (other._size == _size) {
+			for (size_type i = 0; i < _size; ++i) {
+				if (other[i] != operator[](i)) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+
+	const bool operator!=(const fixed_length_container& other) { return !(*this == other); }
+	const bool operator!=(fixed_length_container&& other) { return !(*this == other); }
+
+	template <typename Policy, typename Comparator>
+	void sort() { sort<random_access_iterator, Comparator, Policy>(begin(), end()); }
+
+	const T& maximum() const { return maximum(begin(), end()); }
+
+	const T& minimum() const { return minimum(begin(), end()); }
+
+	void swap(const fixed_length_container& other) { jang::swap(*this, other); }
+
+	constexpr T* data() { return _pointer; }
+	constexpr const T* data() const { return _pointer; }
+protected:
+private:
+};
+
+template <typename T, template <typename, size_type, size_type> typename AbstractDataType, size_type Capacity = 0, size_type GrowthFactor = 1, template <typename> typename Iterator = forward_iterator, typename AllocatorPolicy = standard_based_allocator_policy<T>>
+class forward_sequence_container : public container<T, AllocatorPolicy>, private AbstractDataType<T, Capacity, GrowthFactor> {
+public:
+	typedef AbstractDataType<T, Capacity, GrowthFactor> abstract_data_type;
+	typedef typename abstract_data_type::iterable_type iterable_type;
+	typedef allocator<T, AllocatorPolicy> allocator_type;
+	typedef Iterator<iterable_type> iterator_type;
+	typedef Iterator<const iterable_type> const_iterator_type;
+	typedef container<T, AllocatorPolicy> container_type;
+protected:
+	T* _pointer;
+	using container_type::_size;
+	using container_type::_allocator;
+	using abstract_data_type::_capacity;
+private:
+public://need to allocate an initial size and fix new as it is trying to allocate nullptr... which does not work
+	forward_sequence_container() : _pointer(_allocator.allocate(_capacity)), container_type(), abstract_data_type() {}
+	explicit forward_sequence_container(allocator_type allocator) :  _pointer(_allocator.allocate(_capacity)), container_type(allocator), abstract_data_type() {}
+	forward_sequence_container(size_type size, allocator_type allocator = allocator_type()) : container_type(size, allocator), _pointer(allocator.allocate(_size)), abstract_data_type() {}
+	forward_sequence_container(const forward_sequence_container& other) : container_type(other._size, other._allocator), _pointer(other._pointer) ,abstract_data_type() {}
+	forward_sequence_container(forward_sequence_container&& other) : container_type(move(other._size), move(other._allocator)), _pointer(move(other._pointer)), abstract_data_type() {}
+	template <typename ForwardIterator>
+	forward_sequence_container(ForwardIterator first, ForwardIterator last, const allocator_type allocator = allocator_type()) : container_type(first, last, allocator), abstract_data_type() { copy(first, last, begin()); }
+	forward_sequence_container(initializer_list<T> init, const allocator_type& allocator = allocator_type()) : forward_sequence_container(init.begin(), init.end(), allocator) {}
+	virtual ~forward_sequence_container() { clear(); _allocator.deallocate(_pointer, _capacity); }
+
+	forward_sequence_container& operator=(const forward_sequence_container& other) { 
+		if (this != &other) {
+			_allocator = other._allocator; 
+			_size = other._size; 
+			clear();
+			_allocator.deallocate(_pointer, _capacity);
+			_pointer = _allocator.allocate(_size);
+			copy(other.begin(), other.end(), begin()); 
+		}
+		return *this; 
+	}
+	forward_sequence_container& operator=(forward_sequence_container&& other) { 
+		if (this != &other) {
+			_allocator = move(other._allocator); 
+			_size = move(other._size); 
+			clear();
+			_allocator.deallocate(_pointer, _capacity);
+			_pointer = _allocator.allocate(_size);
+			move(other.begin(), other.end(), begin());
+		}
+		return *this;
+	}
+
+	constexpr iterator_type begin() { return iterator_type(_pointer); }
+	constexpr const_iterator_type const_begin() const { return const_iterator_type(_pointer); }
+
+	constexpr iterator_type end() { return iterator_type(_pointer + _size); }
+	constexpr const_iterator_type const_end() const { return const_iterator_type(_pointer + _size); }
+
+	constexpr T& front() { return *begin(); }
+	constexpr const T& front() const { return *const_begin(); }
+
+	constexpr T& back() { return *(--end()); }
+	constexpr const T& back() const { return *(--const_end()); }
+
+	T& at(const size_type& index) {
+		if (index >= _size) {
+			throw out_of_range();
+		}
+		return operator[](index);
+	}
+	const T& at(const size_type& index) const {
+		if (index >= _size) {
+			throw out_of_range();
+		}
+		return operator[](index);
+	}
+	T& at(size_type&& index) {
+		if (index >= _size) {
+			throw out_of_range();
+		}
+		return operator[](move(index));
+	}
+	const T& at(size_type&& index) const {
+		if (index >= _size) {
+			throw out_of_range();
+		}
+		return operator[](move(index));
+	}
+
+	T& operator[](const size_type& index) { return *(begin() + index); }
+	const T& operator[](const size_type& index) const { return *(const_begin() + index); }
+	T& operator[](size_type&& index) { return *(begin() + move(index)); }
+	const T& operator[](size_type&& index) const { return *(const_begin() + move(index)); }
+
+	const bool operator==(const forward_sequence_container& other) {
+		if (other._size == _size) {
+			auto b = begin(), e = end(), ob = other.begin(), oe = other.end();
+			while (b++ != e && ob++ != oe) {
+				if (*b != *ob) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+	const bool operator==(forward_sequence_container&& other) {
+		if (other._size == _size) {
+			auto b = begin(), e = end(), ob = other.begin(), oe = other.end();
+			while (b++ != e && ob++ != oe) {
+				if (*b != *ob) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+
+	const bool operator!=(const forward_sequence_container& other) { return !(*this == other); }
+	const bool operator!=(forward_sequence_container&& other) { return !(*this == other); }
+
+	void swap(forward_sequence_container& other) { jang::swap(*this, other); }
+
+	iterator_type insert(const_iterator_type pos, const T& value) {
+		auto dis = distance(const_begin(), pos);
+
+		abstract_data_type::grow(_allocator, &_pointer, _size, _size + 1);
+
+		iterator_type cur = iterator_type(_pointer + dis);
+
+		move(cur, end(), next(cur));
+
+		*cur = value;
+
+		_size++;
+
+		return next(cur);
+	}
+	iterator_type insert(const_iterator_type pos, T&& value) {
+		auto dis = distance(const_begin(), pos);
+
+		abstract_data_type::grow(_allocator, &_pointer, _size, _size + 1);
+
+		iterator_type cur = iterator_type(_pointer + dis);
+
+		move(cur, end(), next(cur));
+
+		*cur = move(value);
+
+		_size++;
+
+		return next(cur);
+	}	
+	iterator_type insert(const_iterator_type pos, size_type count, const T& value) {		
+		auto dis = distance(const_begin(), pos);
+
+		abstract_data_type::grow(_allocator, &_pointer, _size, _size + count);
+
+		iterator_type cur = iterator_type(_pointer + dis);
+
+		move(cur, end(), next(cur, count));
+
+		for (size_type i = 0; i < count; ++i) {
+			iterator_type it = (cur + i);
+			*it = value;
+		}
+
+		_size += count;
+
+		return next(cur);
+	}
+	template <typename InputIterator, typename = enable_if_type<is_iterator<InputIterator>::value>>
+	iterator_type insert(const_iterator_type pos, InputIterator first, InputIterator last) {
+		auto dis = distance(const_begin(), pos);
+
+		difference_type count = distance(first, last);
+		
+		abstract_data_type::grow(_allocator, &_pointer, _size, _size + count);
+
+		iterator_type cur = iterator_type(_pointer + dis);
+
+		move(cur, end(), next(cur, count));
+
+		for (size_type i = 0; i < count; ++i) {
+			iterator_type it = (cur + i);
+			*it = *(first + i);
+		}
+
+		_size += count;
+
+		return next(cur);
+	}
+
+	iterator_type insert(const_iterator_type pos, initializer_list<T> list) { return insert(pos, list.begin(), list.end()); }
+	
+	template <typename... Args>
+	iterator_type emplace(const_iterator_type pos, Args&&... args) { return insert(pos, T(forward<Args>(args)...)); }
+
+	void push_back(const T& value) { insert(const_end(), value); }
+
+	void push_back(T&& value) { insert(const_end(), move(value)); }
+
+	iterator_type erase(const_iterator_type position) {
+		iterator_type result = next(begin(), distance(begin(), position));
+		const_iterator_type next = next(result);
+		_allocator.destroy(&(*result));
+		copy(next, end(), result);
+		_size--;
+		return result;
+	}
+
+	iterator_type erase(const_iterator_type first, const_iterator_type last) {
+		auto distance = jang::distance(first, last);
+		iterator_type result = next(begin(), jang::distance(const_begin(), first));
+		iterator_type a = result, b = next(result, distance);
+		for (iterator_type it = a; it != b; ++it) {
+			_allocator.destroy(&(*it));
+		}
+		copy(b, end(), result);
+		_size -= distance;
+		return result;
+	}
+
+	void clear() { erase(const_begin(), const_end()); }
+
+	template <template <typename> typename Comparator = less, template <typename, template<typename> typename> typename Policy = quick>
+	void sort() { sort<Iterator, Comparator, Policy>(begin(), end()); }
+
+	const T& maximum() const { return maximum(begin(), end()); }
+
+	const T& minimum() const { return minimum(begin(), end()); }
+protected:
+private:	
+};
+
+template <typename T, template <typename, size_type, size_type> typename AbstractDataType, size_type Capacity = 0, size_type GrowthFactor = 1, template <typename> typename Iterator = forward_iterator, typename AllocatorPolicy = standard_based_allocator_policy<T>>
+class sequence_container : public forward_sequence_container<T, AbstractDataType, Capacity, GrowthFactor, Iterator, AllocatorPolicy> {
+public:
+	typedef AbstractDataType<T, Capacity, GrowthFactor> abstract_data_type;
+	typedef typename abstract_data_type::iterable_type iterable_type;
+	typedef allocator<T, AllocatorPolicy> allocator_type;
+	typedef Iterator<iterable_type> iterator_type;
+	typedef Iterator<const iterable_type> const_iterator_type;
+	typedef reverse_iterator<iterator_type> reverse_iterator_type;
+	typedef reverse_iterator<const_iterator_type> const_reverse_iterator_type;
+protected:
+private:
+	typedef forward_sequence_container<T, AbstractDataType, Capacity, GrowthFactor, Iterator, AllocatorPolicy> forward_sequence_container_type;
+	using forward_sequence_container_type::_pointer;
+	using forward_sequence_container_type::_size;
+public:
+	constexpr reverse_iterator_type& reverse_begin() { return reverse_iterator_type(_pointer); }
+	constexpr reverse_iterator_type& reverse_end() { return reverse_iterator_type(_pointer + _size); }
+	constexpr const_reverse_iterator_type& const_reverse_begin() const { return const_reverse_iterator_type(_pointer); }
+	constexpr const_reverse_iterator_type& const_reverse_end() const { return const_reverse_iterator_type(_pointer + _size); }
+protected:
+private:
+};
+
+template <typename T, template <typename> typename Iterator = forward_iterator, typename AllocatorPolicy = standard_based_allocator_policy<T>>
+class associative_sequence_container : public container<T, AllocatorPolicy> {
+public:
+protected:
+private:
+public:
+protected:
+private:
+};
+
+template <typename T, template <typename> typename Iterator = forward_iterator, typename AllocatorPolicy = standard_based_allocator_policy<T>>
+class unordered_associative_container : public container<T, AllocatorPolicy> {
+public:
+protected:
+private:
+public:
+protected:
+private:
+};
+
+template <typename T, template <typename> typename Iterator = forward_iterator, typename AllocatorPolicy = standard_based_allocator_policy<T>>
+class container_adaptor : public container<T, AllocatorPolicy> {
+public:
+protected:
+private:
+public:
+protected:
+private:
 };
 
 }

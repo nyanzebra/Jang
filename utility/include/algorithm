@@ -1,31 +1,21 @@
 #pragma once
 
 #include "initializer_list"
+#include "compare"
 
 namespace jang {
 
 template <typename T>
-constexpr const T& max(const T& a, const T& b) { return (a < b ? b : a); }
+constexpr const T& maximum(const T& a, const T& b) { return (a < b ? b : a); }
 
 template <typename T, typename Comparator>
-constexpr const T& max(const T& a, const T& b) { Comparator c; return (c(a, b) ? b : a); }
+constexpr const T& maximum(const T& a, const T& b) { Comparator c; return (c(a, b) ? b : a); }
 
-template <typename T>
-constexpr T max(initializer_list<T> init) {
-	T m = *init.begin();
-	for (auto it = init.begin(); it != init.end(); ++it) {
-		if (m < *it) {
-			m = *it;
-		}
-	}
-	return m;
-}
-
-template <typename T, typename Comparator>
-constexpr T max(initializer_list<T> init) {
-	Comparator c;
-	T m = *init.begin();
-	for (auto it = init.begin(); it != init.end(); ++it) {
+template <typename ForwardIterator, template<typename> typename Comparator = less>
+constexpr typename ForwardIterator::type maximum(ForwardIterator begin, ForwardIterator end) {
+	Comparator<typename ForwardIterator::type> c;
+	typename ForwardIterator::type m = *begin;
+	for (auto it = begin + 1; it != end; ++it) {
 		if (c(m, *it)) {
 			m = *it;
 		}
@@ -33,15 +23,24 @@ constexpr T max(initializer_list<T> init) {
 	return m;
 }
 
+template <typename T>
+constexpr T maximum(initializer_list<T> init) { return maximum(init.begin(), init.end()); }
+
+template <typename T, template<typename> typename Comparator>
+constexpr T maximum(initializer_list<T> init) { return maximum<typename initializer_list<T>::iterator_type, Comparator>(init.begin(), init.end()); }
+
 
 template <typename T>
-constexpr const T& min(const T& a, const T& b) { return (a > b ? b : a); }
+constexpr const T& minimum(const T& a, const T& b) { return (a > b ? b : a); }
 
 template <typename T, typename Comparator>
-constexpr const T& min(const T& a, const T& b) { Comparator c; return (c(a, b) ? b : a); }
+constexpr const T& minimum(const T& a, const T& b) { Comparator c; return (c(a, b) ? b : a); }
+
+template <typename ForwardIterator, template<typename> typename Comparator = greater>
+constexpr typename ForwardIterator::type minimum(ForwardIterator begin, ForwardIterator end) { return maximum<ForwardIterator, greater>(begin, end); }
 
 template <typename T>
-constexpr T min(initializer_list<T> init) {
+constexpr T minimum(initializer_list<T> init) {
 	T m = *init.begin();
 	for (auto it = init.begin(); it != init.end(); ++it) {
 		if (m > *it) {
@@ -52,7 +51,7 @@ constexpr T min(initializer_list<T> init) {
 }
 
 template <typename T, typename Comparator>
-constexpr T min(initializer_list<T> init) {
+constexpr T minimum(initializer_list<T> init) {
 	Comparator c;
 	T m = *init.begin();
 	for (auto it = init.begin(); it != init.end(); ++it) {

@@ -6,16 +6,12 @@
 #include "type_traits"
 
 namespace jang {
-namespace io {
 
 #define LOG_FILE_LOCATION(file) "../logs/" file ".txt"
 #define DEFAULT_LOG_FILE_LOCATION LOG_FILE_LOCATION("log")
 
 class log : public file<char> {
 public:
-	typedef log self_type;
-	typedef file<char> parent_type;
-
 protected:
 
 private:
@@ -38,5 +34,4 @@ public:
 	void write(Iterator begin, Iterator end) { file<char>::write<Iterator>(begin, end); }
 };
 
-} // io
-} // ftl
+}

@@ -1,29 +1,6 @@
 #pragma once
 
-#include <algorithm>
-#include <array>
-#include <cassert>
-#include <ciso646>
-#include <cmath>
-#include <cstddef>
-#include <cstdio>
-#include <cstdlib>
-#include <functional>
-#include <initializer_list>
-#include <iomanip>
-#include <iostream>
-#include <iterator>
-#include <limits>
-#include <map>
-#include <unordered_map>
-#include <memory>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <type_traits>
-#include <utility>
-#include <vector>
-#include <regex>
+
 
 #include "exception"
 #include "file"
@@ -31,8 +8,6 @@
 #include "generic_type_cast"
 
 namespace jang {
-namespace io {
-namespace json {
 
 class json_exception : exception {
 public:
@@ -580,6 +555,4 @@ private:
 
 typedef _json_<> json;
 
-} // json
-} // io
 } // ftl

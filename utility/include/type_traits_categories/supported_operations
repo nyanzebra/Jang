@@ -1,0 +1,227 @@
+#pragma once
+
+#include "miscellaneous_transformations"
+#include "type_relationships"
+
+namespace jang {
+
+template <typename T, typename... Args>
+struct is_constructible : public bool_constant<__is_constructible(T, Args...)> {};
+
+template <typename T, typename... Args>
+constexpr bool is_constructible_value = is_constructible<T, Args...>::value;
+
+template <typename T, typename... Args>
+struct is_trivially_constructible : public bool_constant<__is_trivially_constructible(T, Args...)> {};
+
+template <typename T, typename... Args>
+constexpr bool is_trivially_constructible_value = is_trivially_constructible<T, Args...>::value;
+
+template <typename T, typename... Args>
+struct is_nothrow_constructible : public bool_constant<__is_nothrow_constructible(T, Args...)> {};
+
+template <typename T, typename... Args>
+constexpr bool is_nothrow_constructible_value = is_nothrow_constructible<T, Args...>::value;
+
+template <typename T>
+struct is_default_constructible : public is_constructible<T> {};
+
+template <typename T>
+constexpr bool is_default_constructible_value = is_default_constructible<T>::value;
+
+template <typename T>
+struct is_trivially_default_constructible : public is_trivially_constructible<T> {};
+
+template <typename T>
+constexpr bool is_trivially_default_constructible_value = is_trivially_default_constructible<T>::value;
+
+template <typename T>
+struct is_nothrow_default_constructible : public is_nothrow_constructible<T> {};
+
+template <typename T>
+constexpr bool is_nothrow_default_constructible_value = is_nothrow_default_constructible<T>::value;
+
+template <typename T>
+struct is_copy_constructible : public is_constructible<T, typename add_lvalue_reference<typename add_const<T>::type>::type> {};
+
+template <typename T>
+constexpr bool is_copy_constructible_value = is_copy_constructible<T>::value;
+
+template <typename T>
+struct is_trivially_copy_constructible : public is_trivially_constructible<T, typename add_lvalue_reference<typename add_const<T>::type>::type> {};
+
+template <typename T>
+constexpr bool is_trivially_copy_constructible_value = is_trivially_copy_constructible<T>::value;
+
+template <typename T>
+struct is_nothrow_copy_constructible : public is_nothrow_constructible<T, typename add_lvalue_reference<typename add_const<T>::type>::type> {};
+
+template <typename T>
+constexpr bool is_nothrow_copy_constructible_value = is_nothrow_copy_constructible<T>::value;
+
+template <typename T>
+struct is_move_constructible : public is_constructible<T, typename add_rvalue_reference<T>::type> {};
+
+template <typename T>
+constexpr bool is_move_constructible_value = is_move_constructible<T>::value;
+
+template <typename T>
+struct is_trivially_move_constructible : public is_trivially_constructible<T, typename add_rvalue_reference<T>::type> {};
+
+template <typename T>
+constexpr bool is_trivially_move_constructible_value = is_trivially_move_constructible<T>::value;
+
+template <typename T>
+struct is_nothrow_move_constructible : public is_nothrow_constructible<T, typename add_rvalue_reference<T>::type> {};
+
+template <typename T>
+constexpr bool is_nothrow_move_constructible_value = is_nothrow_move_constructible<T>::value;
+
+namespace implementation {
+
+template <typename To, typename From>
+struct is_assignable {
+	template <typename Dest, typename Src>
+	static auto _function(int) -> decltype((void)(declval<Dest>() = declval<Src>()), true_type());
+
+	template <typename Dest, typename Src>
+	static auto _function(...) -> decltype(false_type());
+
+	typedef decltype(_function<To, From>(0)) type;
+};
+
+template <typename To, typename From>
+using is_assignable_type = typename is_assignable<To, From>::type;
+
+}
+
+template <typename To, typename From>
+struct is_assignable : public implementation::is_assignable_type<To, From> {};
+
+template <typename To, typename From>
+constexpr bool is_assignable_value = is_assignable<To, From>::value;
+
+template <typename To, typename From>
+struct is_trivially_assignable : public bool_constant<__is_trivially_assignable(To, From)> {};
+
+template <typename To, typename From>
+constexpr bool is_trivially_assignable_value = is_trivially_assignable<To, From>::value;
+
+template <typename To, typename From>
+struct is_nothrow_assignable : public bool_constant<__is_nothrow_assignable(To, From)> {};
+
+template <typename To, typename From>
+constexpr bool is_nothrow_assignable_value = is_nothrow_assignable<To, From>::value;
+
+template <typename To, typename From>
+struct is_copy_assignable : public is_assignable<typename add_lvalue_reference<To>::type, typename add_const<typename add_lvalue_reference<From>::type>::type> {};
+
+template <typename To, typename From>
+constexpr bool is_copy_assignable_value = is_copy_assignable<To, From>::value;
+
+template <typename T>
+struct is_trivially_copy_assignable : public is_trivially_assignable<typename add_lvalue_reference<T>::type, typename add_const<typename add_lvalue_reference<T>::type>::type> {};
+
+template <typename T>
+constexpr bool is_trivially_copy_assignable_value = is_trivially_copy_assignable<T>::value;
+
+template <typename T>
+struct is_nothrow_copy_assignable : public is_nothrow_assignable<typename add_lvalue_reference<T>::type, typename add_const<typename add_lvalue_reference<T>::type>::type> {};
+
+template <typename T>
+constexpr bool is_nothrow_copy_assignable_value = is_nothrow_copy_assignable<T>::value;
+
+template <typename To, typename From>
+struct is_move_assignable : public is_assignable<To, typename add_rvalue_reference<From>::type> {};
+
+template <typename To, typename From>
+constexpr bool is_move_assignable_value = is_move_assignable<To, From>::value;
+
+template <typename T>
+struct is_trivially_move_assignable : public is_trivially_assignable<typename add_lvalue_reference<T>::type, typename add_rvalue_reference<T>::type> {};
+
+template <typename T>
+constexpr bool is_trivially_move_assignable_value = is_trivially_move_assignable<T>::value;
+
+template <typename T>
+struct is_nothrow_move_assignable : public is_nothrow_constructible<typename add_lvalue_reference<T>::type, typename add_rvalue_reference<T>::type> {};
+
+template <typename T>
+constexpr bool is_nothrow_move_assignable_value = is_nothrow_move_assignable<T>::value;
+
+#if defined(_MSC_VER)
+template <typename T>
+struct is_destructible : public bool_constant<__is_destructible(T)> {};
+
+template <typename T>
+constexpr bool is_destructible_value = is_destructible<T>::value;
+#endif
+
+template <typename T>
+struct is_trivially_destructible : public bool_constant<__has_trivial_destructor(T)> {};
+
+template <typename T>
+constexpr bool is_trivially_destructible_value = is_trivially_destructible<T>::value;
+
+#if defined(_MSC_VER)
+template <typename T>
+struct is_nothrow_destructible : public bool_constant<__is_nothrow_destructible(T)> {};
+
+template <typename T>
+constexpr bool is_nothrow_destructible_value = is_nothrow_destructible<T>::value;
+#endif
+
+template <typename T>
+struct has_virtual_destructor : public bool_constant<__has_virtual_destructor(T)> {};
+
+template <typename T>
+constexpr bool has_virtual_destructor_value = has_virtual_destructor<T>::value;
+
+namespace implementation {
+
+template <typename T, typename U>
+struct is_atomic_assignable {
+private:
+	template <typename A, typename B>
+	static auto result(int) -> decltype(A()->_value = decltype(B())(), true_type());
+	template <typename A, typename B>
+	static auto result(...) -> decltype(false_type());
+public:
+	typedef decltype(result<T,U>(0)) type;
+	static const bool value = is_same_value<type, true_type>; 
+};
+
+}
+
+template <typename T, typename U>
+struct is_atomic_assignable : public implementation::is_atomic_assignable<T,U>::type {};
+
+template <typename T, typename U>
+constexpr bool is_atomic_assignable_value = is_atomic_assignable<T,U>::value;
+
+
+template <typename T>
+struct is_iterator : public is_base_of<iterator<typename T::type>, T> {};
+
+template <typename T>
+constexpr bool is_iterator_value = is_iterator<T>::value;
+
+template <typename T>
+struct is_forward_iterator : public is_base_of<forward_iterator<typename T::type>, T> {};
+
+template <typename T>
+constexpr bool is_forward_iterator_value = is_forward_iterator<T>::value;
+
+template <typename T>
+struct is_bidirectional_iterator : public is_base_of<bidirectional_iterator<typename T::type>, T> {};
+
+template <typename T>
+constexpr bool is_bidirectional_iterator_value = is_bidirectional_iterator<T>::value;
+
+template <typename T>
+struct is_random_access_iterator : public is_base_of<random_access_iterator<typename T::type>, T> {};
+
+template <typename T>
+constexpr bool is_random_access_iterator_value = is_random_access_iterator<T>::value;
+
+}

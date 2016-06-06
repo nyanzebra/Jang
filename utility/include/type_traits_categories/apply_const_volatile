@@ -1,0 +1,32 @@
+#pragma once
+
+#include "type_properties"
+#include "references"
+
+namespace jang {
+
+template <typename T, typename U, bool = is_const_value<remove_reference_type<T>>, bool = is_volatile_value<remove_reference_type<T>>>
+struct apply_const_volatile { typedef U type; };
+
+template <typename T, typename U>
+struct apply_const_volatile<T, U, true, false> { typedef const U type; };
+
+template <typename T, typename U>
+struct apply_const_volatile<T, U, false, true> { typedef volatile U type; };
+
+template <typename T, typename U>
+struct apply_const_volatile<T, U, true, true> { typedef const volatile U type; };
+
+template <typename T, typename U>
+struct apply_const_volatile<T&, U, false, false> { typedef U& type; };
+
+template <typename T, typename U>
+struct apply_const_volatile<T&, U, true, false> { typedef const U& type; };
+
+template <typename T, typename U>
+struct apply_const_volatile<T&, U, false, true> { typedef volatile U& type; };
+
+template <typename T, typename U>
+struct apply_const_volatile<T&, U, true, true> { typedef const volatile U& type; };
+
+}

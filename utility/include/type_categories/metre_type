@@ -1,0 +1,53 @@
+#pragma once
+
+namespace jang {
+	
+constexpr long double operator"" _metre_type(long double value)  { return value; }
+
+constexpr long double operator"" _deci_metre_type(long double value) { return operator"" _metre_type(value) / 10; }
+constexpr long double operator"" _centi_metre_type(long double value) { return operator"" _deci_metre_type(value) / 10; }
+constexpr long double operator"" _milli_metre_type(long double value) { return operator"" _centi_metre_type(value) / 10; }
+constexpr long double operator"" _micro_metre_type(long double value) { return operator"" _milli_metre_type(value) / 10; }
+constexpr long double operator"" _nano_metre_type(long double value) { return operator"" _micro_metre_type(value) / 10; }
+constexpr long double operator"" _pico_metre_type(long double value) { return operator"" _nano_metre_type(value) / 10; }
+constexpr long double operator"" _femto_metre_type(long double value) { return operator"" _pico_metre_type(value) / 10; }
+constexpr long double operator"" _atto_metre_type(long double value) { return operator"" _femto_metre_type(value) / 10; }
+constexpr long double operator"" _zepto_metre_type(long double value) { return operator"" _atto_metre_type(value) / 10; }
+constexpr long double operator"" _yocto_metre_type(long double value) { return operator"" _zepto_metre_type(value) / 10; }
+
+constexpr long double operator"" _deka_metre_type(long double value) { return operator"" _metre_type(value) * 10; }
+constexpr long double operator"" _hecto_metre_type(long double value) { return operator"" _deka_metre_type(value) * 10; }
+constexpr long double operator"" _kilo_metre_type(long double value) { return operator"" _hecto_metre_type(value) * 10; }
+constexpr long double operator"" _mega_metre_type(long double value) { return operator"" _kilo_metre_type(value) * 10; }
+constexpr long double operator"" _giga_metre_type(long double value) { return operator"" _mega_metre_type(value) * 10; }
+constexpr long double operator"" _tera_metre_type(long double value) { return operator"" _giga_metre_type(value) * 10; }
+constexpr long double operator"" _peta_metre_type(long double value) { return operator"" _tera_metre_type(value) * 10; }
+constexpr long double operator"" _exa_metre_type(long double value) { return operator"" _peta_metre_type(value) * 10; }
+constexpr long double operator"" _zetta_metre_type(long double value) { return operator"" _exa_metre_type(value) * 10; }
+constexpr long double operator"" _yotta_metre_type(long double value) { return operator"" _zetta_metre_type(value) * 10; }
+
+constexpr long double operator"" _metre_type(unsigned long long int value)  { return value; }
+
+constexpr long double operator"" _deci_metre_type(unsigned long long int value) { return operator"" _metre_type(value) / 10; }
+constexpr long double operator"" _centi_metre_type(unsigned long long int value) { return operator"" _deci_metre_type(value) / 10; }
+constexpr long double operator"" _milli_metre_type(unsigned long long int value) { return operator"" _centi_metre_type(value) / 10; }
+constexpr long double operator"" _micro_metre_type(unsigned long long int value) { return operator"" _milli_metre_type(value) / 10; }
+constexpr long double operator"" _nano_metre_type(unsigned long long int value) { return operator"" _micro_metre_type(value) / 10; }
+constexpr long double operator"" _pico_metre_type(unsigned long long int value) { return operator"" _nano_metre_type(value) / 10; }
+constexpr long double operator"" _femto_metre_type(unsigned long long int value) { return operator"" _pico_metre_type(value) / 10; }
+constexpr long double operator"" _atto_metre_type(unsigned long long int value) { return operator"" _femto_metre_type(value) / 10; }
+constexpr long double operator"" _zepto_metre_type(unsigned long long int value) { return operator"" _atto_metre_type(value) / 10; }
+constexpr long double operator"" _yocto_metre_type(unsigned long long int value) { return operator"" _zepto_metre_type(value) / 10; }
+
+constexpr long double operator"" _deka_metre_type(unsigned long long int value) { return operator"" _metre_type(value) * 10; }
+constexpr long double operator"" _hecto_metre_type(unsigned long long int value) { return operator"" _deka_metre_type(value) * 10; }
+constexpr long double operator"" _kilo_metre_type(unsigned long long int value) { return operator"" _hecto_metre_type(value) * 10; }
+constexpr long double operator"" _mega_metre_type(unsigned long long int value) { return operator"" _kilo_metre_type(value) * 10; }
+constexpr long double operator"" _giga_metre_type(unsigned long long int value) { return operator"" _mega_metre_type(value) * 10; }
+constexpr long double operator"" _tera_metre_type(unsigned long long int value) { return operator"" _giga_metre_type(value) * 10; }
+constexpr long double operator"" _peta_metre_type(unsigned long long int value) { return operator"" _tera_metre_type(value) * 10; }
+constexpr long double operator"" _exa_metre_type(unsigned long long int value) { return operator"" _peta_metre_type(value) * 10; }
+constexpr long double operator"" _zetta_metre_type(unsigned long long int value) { return operator"" _exa_metre_type(value) * 10; }
+constexpr long double operator"" _yotta_metre_type(unsigned long long int value) { return operator"" _zetta_metre_type(value) * 10; }
+	
+}

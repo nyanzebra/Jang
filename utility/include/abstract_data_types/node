@@ -1,0 +1,101 @@
+#pragma once
+
+#include "../utility"
+#include "../type_traits"
+
+namespace jang {
+
+template <typename T>
+class node {
+public:
+	typedef T type;
+protected:
+	T _value;
+private:
+public:
+	node() = delete;
+	virtual ~node() {}
+
+	node& operator=(const node& other) { _value = other._value; return *this; }
+	node& operator=(node&& other) { _value = move(other._value); return *this; }
+
+	const T& value() const { return _value; }
+	void value(const T& value) { _value = value; }
+	void value(T&& value) { _value = move(value); }
+
+	constexpr T& operator*() noexcept { return _value; }
+	constexpr const T& operator*() const noexcept { return _value; }
+
+	constexpr node<T>* operator->() noexcept { return this; }
+	constexpr const node<T>* operator->() const noexcept { return this; }
+
+	constexpr const bool operator==(const node& other) const { return _value == other._value; }
+	constexpr const bool operator==(node&& other) const { return _value == move(other._value); }
+
+	constexpr const bool operator!=(const node& other) const { return !(*this == other); }
+	constexpr const bool operator!=(node&& other) const { return !(*this == move(other)); }
+
+	template <typename X, typename Y, typename = enable_if_type<is_assignable_value<node, X> && is_assignable_value<node, Y>>>
+	friend constexpr const bool operator<(X a, Y b) { return less_than(forward<X>(a), forward<Y>(b)); }
+
+	template <typename X, typename Y, typename = enable_if_type<is_assignable_value<node, X> && is_assignable_value<node, Y>>>
+	friend constexpr const bool operator>(X a, Y b) { return greater_than(forward<X>(a), forward<Y>(b)); }
+
+	template <typename X, typename = enable_if_type<is_assignable_value<node, X>>>
+	constexpr const bool operator<=(X a) { return less_than(*this, forward<X>(a)); }
+
+	template <typename X, typename = enable_if_type<is_assignable_value<node, X>>>
+	constexpr const bool operator>=(X a) { return greater_than(*this, forward<X>(a)); }
+protected:
+	node(const T& value) : _value(value)  {}
+	node(T&& value) : _value(move(value)) {}
+	node(const node& other) : _value(other._value) {}
+	node(node&& other) : _value(move(other._value)) {}
+private:
+};
+
+template <typename T>
+class forward_node : public node<T> {
+public:
+	typedef T type;
+protected:
+private:
+	typedef node<T> node_type;
+	forward_node* _next;
+public:
+	forward_node() = delete;
+	forward_node(const T& value, forward_node* next = nullptr) : node_type(value), _next(next)  {}
+	forward_node(T&& value, forward_node* next = nullptr) : node_type(move(value)), _next(next) {}
+	forward_node(const forward_node& other) : node_type(other._value), _next(other._next) {}
+	forward_node(forward_node&& other) : node_type(move(other._value)), _next(move(other._next)) {}
+	virtual ~forward_node() {}
+
+	forward_node* next() { return _next; }
+	const forward_node* next() const { return _next; }
+protected:
+private:
+};
+
+template <typename T>
+class bidirectional_node : public forward_node<T> {
+public:
+	typedef T type;
+protected:
+private:
+	typedef forward_node<T> node_type;
+	bidirectional_node* _previous;
+public:
+	bidirectional_node() = delete;
+	bidirectional_node(const T& value, forward_node<T>* next = nullptr, bidirectional_node* previous = nullptr) : node_type(value, next), _previous(previous)  {}
+	bidirectional_node(T&& value, forward_node<T>* next = nullptr, bidirectional_node* previous = nullptr) : node_type(move(value), next), _previous(previous) {}
+	bidirectional_node(const bidirectional_node& other) : node_type(other._value, other._next), _previous(other._previous) {}
+	bidirectional_node(bidirectional_node&& other) : node_type(move(other._value), move(other._next)), _previous(move(other._previous)) {}
+	virtual ~bidirectional_node() {}
+
+	bidirectional_node* previous() { return _previous; }
+	const bidirectional_node* previous() const { return _previous; }
+protected:
+private:
+};
+
+}

@@ -1,0 +1,93 @@
+#pragma once
+
+#include "container"
+#include "type_traits"
+#include "initializer_list"
+
+namespace jang {
+
+#ifndef NULL_CHAR
+#define NULL_CHAR '\0'
+#endif
+
+template <
+	typename Char, 
+	template <typename, typename> typename Traits, 
+	template <typename> typename Allocator_Policy
+>
+class basic_string : public container<Char, random_access_iterator, Allocator_Policy> {
+public:
+	typedef allocator<Char, Allocator_Policy<Char>> allocator_type;
+	typedef Char char_type;
+	typedef Traits<char_type, int> traits_type;
+	typedef random_access_iterator<char_type> iterator_type;
+	typedef random_access_iterator<const char_type> const_iterator_type;
+	typedef container<Char, random_access_iterator, Allocator_Policy> container_type;
+
+	static const size_type npos = -1;
+
+protected:
+private:
+public:
+	basic_string() : basic_string(allocator_type()) {}
+	explicit basic_string(const allocator_type& alloc) : container_type(alloc) {}
+	basic_string(size_type count, char_type ch, const allocator_type& alloc = allocator_type()) : basic_string(alloc) {}
+	basic_string(const basic_string& other, size_type pos, size_type count = npos, const allocator_type& alloc = allocator_type()) : basic_string(alloc) {}
+	basic_string(const char_type* s, size_type count, const allocator_type& alloc = allocator_type()) : basic_string(alloc) {}
+	basic_string(const char_type* s, const allocator_type& alloc = allocator_type()) : basic_string(alloc) {}
+	template <typename Iterator, typename = enable_if_type<is_iterator<Iterator>::value>>
+	basic_string(Iterator first, Iterator last, const allocator_type& alloc = allocator_type()) : basic_string(alloc) {}
+	basic_string(const basic_string& other) = default;
+	basic_string(const basic_string& other, const allocator_type& alloc) : container_type(alloc), basic_string(other) {}
+	basic_string(basic_string&& other) = default;
+	basic_string(basic_string&& other, const allocator_type& alloc) : container_type(alloc), basic_string(other) {}
+	basic_string(initializer_list<Char> init, const allocator_type& alloc = allocator_type()) : basic_string(init.begin(), init.end(), alloc) {}
+	~basic_string() = default;
+
+	basic_string& operator=(const basic_string& str) { container_type::operator=(str); _set_null_character(); return *this; }
+	basic_string& operator=(basic_string&& str) { container_type::operator=(forward<basic_string>(str)); _set_null_character(); return *this; }
+	basic_string& operator=(const char_type* str) { *this = basic_string(str); return *this; }
+	basic_string& operator=(char_type ch) { *this = basic_string(1, ch); return *this; }
+	basic_string& operator=(initializer_list<char_type> init) { *this = basic_string(init); return *this; }
+
+	basic_string& assign(size_type count, char_type ch) { *this = basic_string(count, ch); return *this; }
+	basic_string& assign(const basic_string& str) { *this = str; return *this; }
+	basic_string& assign(const basic_string& str, size_type pos, size_type count = npos) {  }
+	basic_string& assign(basic_string&& str) { *this = move(str); return *this; }
+	basic_string& assign(const char_type* s, size_type count) { *this = basic_string(s,count); _set_null_character(); return *this; }
+	basic_string& assign(const char_type* s) { *this = basic_string(s); _set_null_character(); return *this; }
+	template <typename InputIterator>
+	basic_string& assign(InputIterator first, InputIterator last) { *this = basic_string(first, last); return *this; }
+	basic_string& assign(initializer_list<char_type> init) { return assign(init.begin(), init.end()); }
+
+
+	int compare(const basic_string& str);
+
+protected:
+private:
+	void _set_null_character() { this->_pointer[this->_size] = NULL_CHAR; }
+};
+
+template <
+	typename Char, 
+	template <typename, typename> typename Traits = char_traits, 
+	template <typename> typename Allocator_Policy = standard_based_allocator_policy
+>
+using _string_type = basic_string<Char, Traits, Allocator_Policy>;
+
+typedef _string_type<utf_8_char_type> utf_8_string_type;
+typedef _string_type<utf_16_char_type> utf_16_string_type;
+typedef _string_type<utf_32_char_type> utf_32_string_type;
+typedef _string_type<wide_char_type> wide_char_string_type;
+
+#if !defined(UTF8_STRING_ENCODING_ENABLE) && !defined(UTF16_STRING_ENCODING_ENABLE) && !defined(UTF32_STRING_ENCODIING_ENABLE)
+typedef utf_8_string_type string;
+#elif UTF8_STRING_ENCODING_ENABLE
+typedef utf_8_string_type string;
+#elif UTF16_STRING_ENCODING_ENABLE	
+typedef utf_16_string_type string;
+#elif UTF32_STRING_ENCODING_ENABLE	
+typedef utf_32_string_type string;
+#endif
+
+}

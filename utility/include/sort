@@ -1,104 +1,115 @@
 #pragma once
 
-#include "type_traits.h"
-#include "compare.h"
+#include "type_traits"
+#include "compare"
+#include "iterator"
+#include "container"
 
 namespace jang {
 
-
-
-class mergesort {
+template<typename Iterator, template <typename> typename Comparator = less>
+class merge {
 public:
-	template<typename _It, typename _Comparator = less<typename std::iterator_traits<_It>::value_type>>
-	void operator()(_It begin, _It end) {
-		if (std::distance(begin, end) < 2) {
+	typedef Iterator iterator_type;
+	typedef typename iterator_traits<iterator_type>::value_type type;
+	typedef Comparator<type> comparator_type;
+protected:
+private:
+public:
+	void operator()(iterator_type begin, iterator_type end) {
+		if (distance(begin, end) < 2) {
 			return;
 		}
 
-		auto mid = std::next(begin, std::distance(begin, end) / 2);
+		auto mid = next(begin, distance(begin, end) / 2);
 		operator()(begin, mid);
 		operator()(mid, end);
 		auto&& v = _merge(begin, mid, end);
-		std::move(v.begin(), v.end(), begin);
+		move(v.begin(), v.end(), begin);
 	}
+protected:
 private:
+	template <typename T> class sequence_container;
+	sequence_container<type> _merge(iterator_type begin, iterator_type mid, iterator_type end) {
+		sequence_container<type> result;
 
-	template<typename _It, typename _Comparator = less<typename std::iterator_traits<_It>::value_type>>
-	std::vector<typename std::iterator_traits<_It>::value_type> _merge(_It begin, _It mid, _It end) {
-		std::vector<typename std::iterator_traits<_It>::value_type> result;
-
-		_Comparator _comparator;
+		comparator_type comparator;
 
 		auto lb = begin, le = mid, rb = mid, re = end;
 		while (lb != le && rb != re) {
-			if (_comparator(*lb, *rb)) {
+			if (comparator(*lb, *rb)) {
 				result.push_back(*lb);
-				std::advance(lb, 1);
+				advance(lb, 1);
 			} else {
 				result.push_back(*rb);
-				std::advance(rb, 1);
+				advance(rb, 1);
 			}
 		}
 
 		result.insert(result.end(), lb, le);
 		result.insert(result.end(), rb, re);
 
-		return std::move(result);
+		return move(result);
 	}
 };
 
-class quicksort {
+template<typename Iterator, template <typename> typename Comparator = less>
+class quick {
+public:
+	typedef Iterator iterator_type;
+	typedef typename iterator_traits<iterator_type>::value_type type;
+	typedef Comparator<type> comparator_type;
+protected:
+private:
 public:
 
-	template<typename _It, typename _Comparator = less<typename std::iterator_traits<_It>::value_type>>
-	void operator()(_It begin, _It end) {
-		if (std::distance(begin, end) < 2) {
+	void operator()(iterator_type begin, iterator_type end) {
+		if (distance(begin, end) < 2) {
 			return;
 		}
 
-		auto p = partition(begin, end);
+		auto p = _partition(begin, end);
 		operator()(begin, p);
-		operator()(std::next(p, 1), end);
+		operator()(next(p, 1), end);
 	}
 
+protected:
 private:
 
-	template<typename _It, typename _Comparator = less<typename std::iterator_traits<_It>::value_type>>
-	_It partition(_It begin, _It end) {
+	iterator_type _partition(iterator_type begin, iterator_type end) {
 		auto left = begin, right = end;
 		auto p = pivot(begin, end);
 		auto val = *p;
-		_Comparator _comparator;
+		comparator_type comparator;
 
-		std::advance(right, -1);
-		std::swap(*p, *right);
+		advance(right, -1);
+		swap(*p, *right);
 
 		auto q = left;
 		while (left != right) {
-			if (_comparator(*left, val)) {
-				std::swap(*q, *left);
-				std::advance(q, 1);
+			if (comparator(*left, val)) {
+				swap(*q, *left);
+				advance(q, 1);
 			}
-			std::advance(left, 1);
+			advance(left, 1);
 		}
 
-		std::swap(*right, *q);
+		swap(*right, *q);
 		return q;
 	}
 
-	template<typename _It>
-	_It pivot(_It begin, _It end) {
-		return std::next(begin, std::distance(begin, end) / 2);
-	}
+	iterator_type _pivot(iterator_type begin, iterator_type end) { return next(begin, distance(begin, end) / 2); }
 };
 
 
-template<typename _Policy>
-struct sort : public _Policy {
-	typedef _Policy policy;
+template <typename Iterator, template <typename> typename Comparator, template <typename, template<typename> typename> typename Policy = quick>
+struct sorter : public Policy<Iterator, Comparator> {
+	typedef Policy<Iterator, Comparator> policy_type;
 
-	template<typename _It, typename _Comparator = less<typename std::iterator_traits<_It>::value_type>>
-	void operator()(_It begin, _It end) { _Policy::operator()(begin, end); }
+	void operator()(Iterator begin, Iterator end) { policy_type::operator()(begin, end); }
 };
+
+template <typename Iterator, template <typename> typename Comparator = less, template <typename, template <typename> typename> typename Policy = quick>
+void sort(Iterator begin, Iterator end) { Policy<Iterator, Comparator>::operator()(begin,end); }
 
 }

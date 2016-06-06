@@ -1,0 +1,6 @@
+#pragma once
+
+#include "ios"
+#include "input_stream"
+#include "output_stream"
+#include "stream_buffer"

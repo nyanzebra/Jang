@@ -1,93 +1,85 @@
 #pragma once
 
-#include "type_traits"
+#include "type_traits_categories/references"
+#include "type_traits_categories/primary_type_categories"
+#include "iterator"
+#include "utilities/declval"
 
 namespace jang {
 
 template <typename T>
-constexpr typename remove_reference<T>::type&& move(T&& arg) {
-	return static_cast<typename remove_reference<T>::type&&>(arg);
-}
+constexpr remove_reference_type<T>&& move(T&& arg) { return static_cast<remove_reference_type<T>&&>(arg); }
 
-template <typename InputIterator, typename OutputIterator, typename = enable_if_type<is_iterator<InputIterator>::value && is_iterator<OutputIterator>::value>>
+template <typename InputIterator, typename OutputIterator>
 OutputIterator move(InputIterator first, InputIterator last, OutputIterator destination) {
-	while (first != last) destination = move(*first++);
+	while (first != last) *destination++ = move(*first++);
 	return destination;
 }
 
 template <typename T>
-constexpr T&& forward(typename remove_reference<T>::type&& arg) {
-	static_assert(!is_lvalue_reference<T>::value, "Cannot forward an rvalue as an lvalue");
-	return static_cast<typename remove_reference<T>::type&&>(arg);
+constexpr T&& forward(remove_reference_type<T>&& arg) {
+	static_assert(!is_lvalue_reference_value<T>, "Cannot forward an rvalue as an lvalue");
+	return static_cast<T&&>(arg);
 }
 
 template <typename T>
-constexpr T&& forward(typename remove_reference<T>::type& arg) {
-	return static_cast<typename remove_reference<T>::type>&&(arg);
-}
+constexpr T&& forward(typename remove_reference<T>::type& arg) { return static_cast<T&&>(arg); }
 
-template <typename InputIterator, typename OutputIterator, typename = enable_if_type<is_iterator<InputIterator>::value && is_iterator<OutputIterator>::value>>
+template <typename InputIterator, typename OutputIterator>
 OutputIterator copy(InputIterator first, InputIterator last, OutputIterator destination) {
-	while (first != last) destination = *first++;
+	while (first != last) *destination++ = *first++;
 	return destination;
 }
 
-#ifndef DECLVAL
-#define DECLVAL
+template <size_type N> size_type system_architecture_determination_template() { return 0_bytes_type;}
 
-template <typename T>
-typename add_rvalue_reference<T>::type declval();
+template <> size_type system_architecture_determination_template<1>() { return 1_bytes_type; }
+template <> size_type system_architecture_determination_template<2>() { return 2_bytes_type; }
+template <> size_type system_architecture_determination_template<4>() { return 4_bytes_type; }
+template <> size_type system_architecture_determination_template<8>() {return 8_bytes_type; }
+template <> size_type system_architecture_determination_template<16>() { return 16_bytes_type; }
 
-#endif
+size_type system_architecture() { return system_architecture_determination_template<sizeof(size_type)>() * 8; }
+
 
 template <typename First, typename Second>
 class pair {
 public:
-	typedef pair<First, Second> self_type;
 	typedef First first_type;
 	typedef Second second_type;
-
-	First first;
-	Second second;
-
+	first_type first;
+	second_type second;
 protected:
-
 private:
-
 public:
-
 	pair(const first_type& first, const second_type& second) : first(first), second(second) {}
 	pair(first_type&& first, second_type&& second) : first(move(first)), second(move(second)) {}
-	pair(const self_type& other) : first(other.first), second(other.second) {}
-	pair(self_type&& other) : first(move(other.first)), second(move(other.second)) {}
-	~pair() { if (is_pointer<first_type>::value) delete first; if (is_pointer<second_type>::value) delete second; }
-
-
+	pair(const pair& other) : first(other.first), second(other.second) {}
+	pair(pair&& other) : first(move(other.first)), second(move(other.second)) {}
+	~pair() {}
 protected:
-
 private:
 };
 
-template <typename T, typename = enable_if_type<is_assignable<T, T>::value>>
-void swap(T& a, T& b) {
-	auto c = a;
-	a = b;
-	b = c;
+template <typename T>
+void swap(T& a, T& b) { auto c = a; a = b; b = c; }
+
+template <typename Iterator>
+void iterator_swap(Iterator a, Iterator b) { swap(*a, *b); }
+
+template <typename InputForwardIterator, typename OutputForwardIterator>
+OutputForwardIterator swap_ranges(InputForwardIterator input_first, InputForwardIterator input_last, OutputForwardIterator ouput_first) {
+	while (input_first != input_last) iterator_swap(input_first, ouput_first);
+	return ouput_first;
 }
 
-template <typename Iterator, typename = enable_if_type<is_iterator<Iterator>::value>>
-void iterator_swap(Iterator a, Iterator b) {
-	swap(*a, *b);
-}
+template <typename T, size_type N>
+void swap(T (&a)[N], T(&b)[N]) { swap_ranges(a, a + N, b); }
 
-template <typename T, typename U, typename = enable_if_type<is_arithmetic<T>::value && is_arithmetic<U>::value && is_convertible<U, T>::value>>
-constexpr bool will_overflow(T t, U u) {
-	return (t + (T)u < 0 || t + (T)u < t || (U)(t + (T)u) < u);
-}
+template <typename T, typename U>
+constexpr bool will_overflow(const T& t, const U& u) { return (t + (T)u < 0 || t + (T)u < t || (U)(t + (T)u) < u); }
 
-template <typename T, typename = enable_if_type<is_arithmetic<T>::value>>
-constexpr bool will_overflow(T t, T u) {
-	return will_overflow<T, T>(t, u);
-}
+template <typename T, typename U>
+constexpr bool will_overflow(T&& t, U&& u) { return (forward(t) + (T)forward(u) < 0 || forward(t) + (T)forward(u) < t || (U)(forward(t) + (T)forward(u)) < u); }
 
 }

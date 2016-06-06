@@ -1,0 +1,96 @@
+#pragma once
+
+//#include <cstddef>
+#include <pthread.h>
+
+namespace jang {
+
+template <typename T>
+struct identity { typedef T type; };
+
+template <typename T>
+using identity_type = typename identity<T>::type;
+
+struct no_throw_type {};
+
+struct stream_type {};
+
+struct aligned_type {};
+
+struct abstract_data_type {};
+
+typedef pthread_mutex_t* native_handle_type;
+
+typedef void 							void_type;
+typedef bool 							bit_type;
+typedef unsigned char 					byte_type;	 
+
+typedef void* 							void_pointer_type;
+typedef const void* 					const_void_pointer_type;
+typedef void* const 					void_pointer_const_type;
+typedef const void* const 				const_void_pointer_const_type;
+
+typedef char*							arithmetic_pointer_type;
+typedef const char*    					const_arithmetic_pointer_type;
+typedef char* const 					arithmetic_pointer_const_type;
+typedef const char* const 				const_arithmetic_pointer_const_type;
+
+typedef unsigned long           		size_type;
+typedef long long int 					pointer_difference_type;
+typedef const pointer_difference_type 	const_pointer_difference_type;
+typedef pointer_difference_type 		difference_type;
+typedef const_pointer_difference_type 	const_difference_type;
+typedef decltype(nullptr) 				nullptr_type;
+
+typedef char 							char_8_type;
+typedef unsigned short 					char_16_type;
+typedef unsigned int 					char_32_type;
+typedef wchar_t 						wide_char_type;
+
+typedef signed char 					int_8_type;
+typedef int_8_type 						int_least_8_type;
+typedef int_8_type 						int_fast_8_type;
+typedef unsigned char 					unsigned_int_8_type;
+typedef unsigned_int_8_type 			unsigned_int_least_8_type;
+typedef unsigned_int_8_type 			unsigned_int_fast_8_type;
+
+typedef signed short 					int_16_type;
+typedef int_16_type 					int_least_16_type;
+typedef int_16_type 					int_fast_16_type;
+typedef unsigned short 					unsigned_int_16_type;
+typedef unsigned_int_16_type 			unsigned_int_least_16_type;
+typedef unsigned_int_16_type 			unsigned_int_fast_16_type;
+
+typedef signed int 						int_32_type;
+typedef int_32_type 					int_least_32_type;
+typedef int_32_type 					int_fast_32_type;
+typedef unsigned int 					unsigned_int_32_type;
+typedef unsigned_int_32_type 			unsigned_int_least_32_type;
+typedef unsigned_int_32_type 			unsigned_int_fast_32_type;
+
+typedef signed long long 				int_64_type;
+typedef int_64_type 					int_least_64_type;
+typedef int_64_type 					int_fast_64_type;
+typedef unsigned long long 				unsigned_int_64_type;
+typedef unsigned_int_64_type 			unsigned_int_least_64_type;
+typedef unsigned_int_64_type 			unsigned_int_fast_64_type;
+
+typedef long long 						int_max_type;
+typedef unsigned long long 				unsigned_int_max_type;
+
+typedef __INTPTR_TYPE__ 				int_pointer_type;
+typedef __UINTPTR_TYPE__ 				unsigned_int_pointer_type;
+
+typedef char_8_type 					utf_8_char_type;
+typedef char_16_type 					utf_16_char_type;
+typedef char_32_type 					utf_32_char_type;
+
+typedef long double 					max_align_type;
+	
+typedef void(*void_callback_type)();
+
+typedef void_callback_type new_handler_type;
+
+typedef void(*void_variadic_callback_type)(...);
+
+}

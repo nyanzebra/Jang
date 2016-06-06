@@ -1,0 +1,7 @@
+#pragma once
+
+namespace jang {
+
+	struct abstract_data_type {};
+
+}
